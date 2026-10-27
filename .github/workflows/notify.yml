@@ -1,0 +1,32 @@
+name: Notificações
+
+# Execução manual do notificador (para testes). Em produção o notificador vai correr no servidor
+# de alojamento (tarefa agendada do cPanel): num repositório privado, correr aqui a cada 5 minutos
+# gastaria mais minutos do que o plano gratuito do GitHub inclui.
+# Precisa do segredo FIREBASE_SERVICE_ACCOUNT (Settings → Secrets and variables → Actions).
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: notify
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: notifier/package-lock.json
+      - run: npm ci --prefix notifier --no-audit --no-fund
+      - run: node notifier/notify.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          APP_URL: ${{ vars.APP_URL }}
