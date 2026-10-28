@@ -1,6 +1,6 @@
 // Página de apresentação: é o que vê quem ainda não entrou (o site de saskids.net).
 // O app.js trata dos formulários de "Entrar" e "Nova família".
-import { t as tr, LANG, legalUrl, langSelect } from "./i18n.js?v=2026-10-28.11";
+import { t as tr, LANG, legalUrl, langSelect } from "./i18n.js?v=2026-10-28.12";
 
 const IMG = "illustrations/";
 

@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.11";
-import { landingHTML } from "./landing.js?v=2026-10-28.11";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.12";
+import { landingHTML } from "./landing.js?v=2026-10-28.12";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -116,7 +116,8 @@ const STATUS_LABEL = { pending: tr("Por validar"), approved: tr("Aprovado"), rej
 const statusPill = (s) => `<span class="pill ${s}">${STATUS_LABEL[s]}</span>`;
 
 async function hashPin(pin) {
-  const data = new TextEncoder().encode(`${S.familyId}:${pin}`);
+  // Famílias trazidas de outra instalação guardam o id antigo em pinSalt, para os PINs continuarem válidos.
+  const data = new TextEncoder().encode(`${S.fam?.pinSalt || S.familyId}:${pin}`);
   const h = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -1281,7 +1282,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.11";
+const APP_VERSION = "2026-10-28.12";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
