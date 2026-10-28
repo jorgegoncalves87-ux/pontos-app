@@ -59,12 +59,13 @@ function authCard() {
       <button class="cta block" type="submit">Entrar</button>
       <button class="link" type="button" id="forgot">Esqueci-me da password</button>
       <p class="hint">Filhos: abram o link que o pai/mãe vos enviou. Não precisam de email.</p>
+      <p class="hint"><a href="privacidade.html" target="_blank">Privacidade</a> · <a href="termos.html" target="_blank">Termos</a></p>
     </form>
     <form id="registerForm" class="auth-form hidden">
       <label>Email do pai/mãe</label><input name="email" type="email" autocomplete="username" required>
       <label>Password (mínimo 6 caracteres)</label><input name="password" type="password" autocomplete="new-password" required minlength="6">
       <label>Repetir password</label><input name="password2" type="password" autocomplete="new-password" required minlength="6">
-      <label class="check"><input name="adult" type="checkbox" required> <span>Sou maior de idade e responsável pelas crianças que vou adicionar.</span></label>
+      <label class="check"><input name="adult" type="checkbox" required> <span>Sou maior de idade, sou responsável pelas crianças que vou adicionar e aceito os <a href="termos.html" target="_blank">Termos</a> e a <a href="privacidade.html" target="_blank">Política de Privacidade</a>.</span></label>
       <div class="err" id="registerErr"></div>
       <button class="cta block" type="submit">Criar nova família</button>
       <p class="hint">A seguir escolhes o PIN dos pais e adicionas os filhos.</p>
@@ -75,12 +76,11 @@ function authCard() {
 /** Na app instalada no ecrã principal não faz sentido a apresentação: só o cartão de entrada. */
 export function landingHTML(standalone) {
   if (standalone) {
-    return `<div class="lp-compact"><div class="logo big">⭐ SAS Kids</div>
-      <img src="${IMG}hero.svg" alt="" class="compact-art">${authCard()}</div>`;
+    return `<div class="lp-compact"><img src="${IMG}mascote.svg" alt="" class="compact-mascot"><img src="${IMG}logo-texto.svg" alt="SAS Kids" class="compact-logo">${authCard()}</div>`;
   }
   return `
   <header class="lp-nav">
-    <a class="logo" href="#topo">⭐ SAS Kids</a>
+    <a class="logo" href="#topo"><img src="${IMG}logo-icon.svg" alt="" class="logo-ic"><img src="${IMG}logo-texto.svg" alt="SAS Kids" class="logo-txt"></a>
     <nav><a href="#como">Como funciona</a><a href="#beneficios">Benefícios</a><a href="#perguntas">Perguntas</a></nav>
     <button class="cta small" data-go="login">Entrar</button>
   </header>
@@ -144,13 +144,14 @@ export function landingHTML(standalone) {
     <div>
       <h2>Começa hoje</h2>
       <p class="sub">Cria a conta da família em menos de 2 minutos. Se já tens conta, entra aqui.</p>
-      <img src="${IMG}brinquedos.svg" alt="" class="auth-art">
+      <img src="${IMG}mascote.svg" alt="A mascote da SAS Kids a saltar com uma estrela" class="auth-art mascot">
     </div>
     ${authCard()}
   </section>
 
   <footer class="lp-foot">
-    <div class="logo">⭐ SAS Kids</div>
+    <img src="${IMG}logo.svg" alt="SAS Kids" class="foot-logo">
     <p>© ${new Date().getFullYear()} SAS Kids. Feito em Portugal para famílias.</p>
+    <p class="legal"><a href="termos.html">Termos e Condições</a> · <a href="privacidade.html">Política de Privacidade</a></p>
   </footer>`;
 }

@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, sendPasswordResetEmail, signInAnonymously, connectAuthEmulator,
+  EmailAuthProvider, reauthenticateWithCredential, deleteUser,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch,
@@ -10,7 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { landingHTML } from "./landing.js?v=2026-10-28.3";
+import { landingHTML } from "./landing.js?v=2026-10-28.4";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -1167,7 +1168,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.3";
+const APP_VERSION = "2026-10-28.4";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1439,7 +1440,10 @@ function openSettings() {
     <p class="small muted">Põe o saldo de todos os filhos a 0 e apaga o histórico de pontos (tarefas marcadas, validações, bónus, penalizações e pedidos de prémio). Filhos, tarefas e prémios ficam.</p>
     <button type="button" class="bad" id="resetPoints">Apagar todos os pontos</button>
     <p class="small muted" style="margin-top:16px">${isDevice() ? "Aparelho ligado por link" : `Conta: ${esc(S.user.email)}`}</p>
-    <button type="button" class="bad" id="logoutAll" style="margin-top:8px">${isDevice() ? "Desligar este aparelho" : "Sair da conta neste aparelho"}</button>`,
+    <button type="button" class="bad" id="logoutAll" style="margin-top:8px">${isDevice() ? "Desligar este aparelho" : "Sair da conta neste aparelho"}</button>
+    ${isDevice() ? "" : `<label style="margin-top:18px">Apagar conta</label>
+    <p class="small muted">Apaga para sempre a conta da família e todos os dados: filhos, fotos, tarefas, prémios, pontos e histórico. <a href="privacidade.html" target="_blank">Política de privacidade</a></p>
+    <button type="button" class="bad" id="deleteAccount">Apagar conta e todos os dados</button>`}`,
   async (fd) => {
     const pin = fd.get("pin");
     const back = Number(fd.get("backDays"));
@@ -1458,6 +1462,18 @@ function openSettings() {
   const photo = photoEditor(form, S.fam.parentPhoto && PHOTO_RE.test(S.fam.parentPhoto) ? S.fam.parentPhoto : null);
   form.querySelector("#logoutAll").onclick = () => { closeModal(); leaveDevice(); };
   form.querySelector("#linkDevice").onclick = () => guard(openLinkDevice);
+  const del = form.querySelector("#deleteAccount");
+  if (del) del.onclick = () => {
+    if (!confirm("Apagar a conta e TODOS os dados da família? Isto não se pode desfazer.")) return;
+    openForm("Confirmar com a password", `<p class="small muted">Por segurança, escreve a password da conta ${esc(S.user.email)}.</p>
+      <label>Password</label><input name="password" type="password" autocomplete="current-password" required>`,
+    async (fd) => {
+      try { await reauthenticateWithCredential(S.user, EmailAuthProvider.credential(S.user.email, fd.get("password"))); }
+      catch (e) { throw new Error(authError(e.code)); }
+      await deleteFamily();
+      toast("Conta e dados apagados.");
+    }, "Apagar tudo");
+  };
   form.querySelector("#resetPoints").onclick = () => guard(async () => {
     if (!confirm("Apagar TODOS os pontos e o histórico? Isto não se pode desfazer.")) return;
     if (!confirm("Tens a certeza? Os saldos de todos os filhos voltam a 0.")) return;
@@ -1527,6 +1543,23 @@ async function resetPoints() {
     await batch.commit();
   }
   return snap.size;
+}
+
+/** Apaga todos os dados da família e, por fim, a própria conta (direito ao apagamento, RGPD art. 17.º). */
+async function deleteFamily() {
+  stopListeners();
+  const refs = [];
+  for (const name of ["log", "tasks", "rewards", "kids", "pushTokens", "members"]) {
+    (await getDocs(col(name))).docs.forEach((d) => refs.push(d.ref));
+  }
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = writeBatch(db);
+    refs.slice(i, i + 400).forEach((r) => batch.delete(r));
+    await batch.commit();
+  }
+  await deleteDoc(famDoc());
+  try { localStorage.clear(); } catch {}
+  await deleteUser(S.user);
 }
 
 /** Desliga todos os aparelhos ligados por link e invalida o link antigo. */
