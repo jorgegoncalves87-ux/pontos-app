@@ -527,3 +527,18 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .help-steps .help-img { width: 86px; display: block; }
 .help-steps.text li { grid-template-columns: 1fr; padding: 12px 12px 12px 40px; }
 .help-steps.text li::before { top: 50%; transform: translateY(-50%); left: 10px; }
+
+/* Página dos links dos emails */
+.auth-page { padding-top: 32px; }
+.auth-page .auth-card { text-align: center; }
+.auth-page .auth-mascot { width: 120px; display: block; margin: 0 auto 8px; }
+.auth-page h1 { font-size: 1.5rem; margin: 6px 0 8px; }
+.auth-page .auth-form { text-align: left; }
+.auth-page a.cta { display: block; text-align: center; text-decoration: none; margin-top: 16px; }
+
+/* Confirmar o email (na app) */
+.verify-box { max-width: 440px; margin: 24px auto 0; text-align: center; }
+.verify-box .auth-mascot { width: 130px; display: block; margin: 0 auto 6px; }
+.verify-box .actions { justify-content: center; flex-wrap: wrap; }
+.verify-banner { background: var(--butter); border: none; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.verify-banner p { margin: 0; flex: 1; min-width: 180px; }

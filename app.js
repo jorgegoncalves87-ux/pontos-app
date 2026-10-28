@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, sendPasswordResetEmail, signInAnonymously, connectAuthEmulator,
-  EmailAuthProvider, reauthenticateWithCredential, deleteUser,
+  EmailAuthProvider, reauthenticateWithCredential, deleteUser, sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch,
@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.12";
-import { landingHTML } from "./landing.js?v=2026-10-28.12";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.13";
+import { landingHTML } from "./landing.js?v=2026-10-28.13";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -387,6 +387,8 @@ function render() {
   if (!S.user) return renderLogin();
   if (!S.familyId) return renderNotLinked();
   if (S.fam === undefined) { app.innerHTML = `<div class="center muted">${tr("A carregar…")}</div>`; return; }
+  // Família nova: primeiro confirma-se o email (as famílias que já existiam veem só um aviso).
+  if (S.fam === null && !isDevice() && !S.user.emailVerified) return renderVerify();
   if (S.fam === null) return renderSetup();
   if (S.role && S.role !== "parent" && !kidById(S.role)) {
     // O perfil guardado já não existe (ou os filhos ainda estão a carregar).
@@ -397,6 +399,47 @@ function render() {
   if (!S.role) return renderProfiles();
   if (S.role === "parent") return renderParent();
   return renderKid(kidById(S.role));
+}
+
+// ---------- Emails (confirmar o email e repor a password) ----------
+// Os emails saem do nosso servidor (api/mail.php) com o desenho da SAS Kids. Se ele falhar, usa-se
+// o email simples da Firebase, para ninguém ficar sem conseguir confirmar ou recuperar a conta.
+async function requestMail(action, extra) {
+  try {
+    const res = await fetch("api/mail.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, lang: LANG, ...extra }) });
+    if (res.status === 429) return "too-many";
+    return res.ok ? "ok" : "fail";
+  } catch { return "fail"; }
+}
+async function sendVerification() {
+  const r = await requestMail("verify", { idToken: await S.user.getIdToken() });
+  if (r === "fail") { try { await sendEmailVerification(S.user); return "ok"; } catch { return "fail"; } }
+  return r;
+}
+const mailToast = (r) => toast(r === "ok" ? tr("Email enviado! Vê também a pasta de spam.")
+  : r === "too-many" ? tr("Espera um pouco antes de pedir outro email.") : tr("Não foi possível enviar o email. Tenta daqui a pouco."));
+
+/** Confirma se o email já foi confirmado (o utilizador volta do email para a app). */
+async function checkVerified(silent) {
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous || app.querySelector("#verifiedBtn") === null && u.emailVerified) return;
+  await u.reload().catch((e) => console.warn("reload", e));
+  if (u.emailVerified) { S.user = u; await u.getIdToken(true).catch(() => {}); render(); toast(tr("Email confirmado!")); }
+  else if (!silent) toast(tr("Ainda não está confirmado. Abre o email e toca no botão."));
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.user && !S.user.isAnonymous) checkVerified(true); });
+
+function renderVerify() {
+  app.innerHTML = `<div class="verify-box">${BRAND}<div class="card">
+    <img src="illustrations/mascote.svg" alt="" class="auth-mascot">
+    <h1>${tr("Confirma o teu email")}</h1>
+    <p class="muted">${tr("Enviámos um email para {email}. Abre-o e toca em <b>Confirmar email</b>. Depois volta aqui.", { email: `<b>${esc(S.user.email)}</b>` })}</p>
+    <button class="primary block" id="verifiedBtn">${tr("Já confirmei")}</button>
+    <div class="actions"><button class="link" id="resendBtn">${tr("Reenviar email")}</button><button class="link" id="otherAccount">${tr("Usar outra conta")}</button></div>
+  </div></div>`;
+  document.getElementById("verifiedBtn").onclick = () => guard(() => checkVerified(false));
+  document.getElementById("resendBtn").onclick = () => guard(async () => mailToast(await sendVerification()));
+  document.getElementById("otherAccount").onclick = () => signOut(auth);
 }
 
 function renderNotLinked() {
@@ -454,8 +497,11 @@ function renderLogin() {
   document.getElementById("forgot").onclick = async () => {
     const email = login.email.value.trim();
     if (!email) { loginErr.textContent = tr("Escreve primeiro o email."); return; }
-    try { await sendPasswordResetEmail(auth, email); toast(tr("Enviámos um email para recuperares a password.")); }
-    catch (e) { loginErr.textContent = authError(e.code); }
+    if (!/^\S+@\S+\.\S+$/.test(email)) { loginErr.textContent = authError("auth/invalid-email"); return; }
+    let r = await requestMail("reset", { email });
+    if (r === "fail") { try { await sendPasswordResetEmail(auth, email); r = "ok"; } catch (e) { r = e.code === "auth/user-not-found" ? "ok" : "fail"; } }
+    if (r === "ok") toast(tr("Se existir uma conta com este email, enviámos um link para escolheres uma password nova."));
+    else mailToast(r);
   };
 
   const reg = document.getElementById("registerForm");
@@ -464,8 +510,11 @@ function renderLogin() {
     ev.preventDefault();
     regErr.textContent = "";
     if (reg.password.value !== reg.password2.value) { regErr.textContent = tr("As passwords não coincidem."); return; }
-    try { await createUserWithEmailAndPassword(auth, reg.email.value.trim(), reg.password.value); }
-    catch (e) { regErr.textContent = authError(e.code); }
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, reg.email.value.trim(), reg.password.value);
+      S.user = cred.user;
+      sendVerification();
+    } catch (e) { regErr.textContent = authError(e.code); }
   };
 }
 
@@ -1108,9 +1157,12 @@ function renderParent() {
   const views = { validate: parentValidate, kids: parentKids, tasks: parentTasks, rewards: parentRewards, history: parentHistory };
   renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="${tr("Mudar a foto do pai/mãe")}">${parentAvatar("md")}<span class="cam">📷</span></button> ${tr("Pai / Mãe")}</h1>
     <div>${bellButton("parent")}<button class="icon-btn" id="settings" title="${tr("Definições")}" aria-label="${tr("Definições")}">${ICON.settings}</button><button class="link" id="switch">${tr("Trocar")}</button></div></div>
+    ${!isDevice() && !S.user.emailVerified && S.tab === "validate" ? `<div class="card verify-banner"><p>${tr("Confirma o teu email para poderes recuperar a password se a esqueceres.")}</p><button class="primary" id="verifyNow">${tr("Enviar email de confirmação")}</button></div>` : ""}
     ${views[S.tab]()}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   document.getElementById("settings").onclick = openSettings;
+  const vn = document.getElementById("verifyNow");
+  if (vn) vn.onclick = () => guard(async () => mailToast(await sendVerification()));
   bindTabs();
   document.getElementById("bell").onclick = () => guard(() => togglePush("parent"));
   document.getElementById("myPhoto").onclick = () => photoForm(tr("Foto do pai/mãe"), S.fam.parentPhoto, (photo) => updateDoc(famDoc(), { parentPhoto: photo }));
@@ -1282,7 +1334,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.12";
+const APP_VERSION = "2026-10-28.13";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
