@@ -542,3 +542,10 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .verify-box .actions { justify-content: center; flex-wrap: wrap; }
 .verify-banner { background: var(--butter); border: none; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .verify-banner p { margin: 0; flex: 1; min-width: 180px; }
+
+/* Sugestões de missões */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
+.chip { white-space: normal; text-align: left; font-weight: 600; font-size: .9rem; padding: 8px 12px; border-radius: 14px; background: var(--lilac); border: 2px solid transparent; }
+.chip b { color: var(--primary); }
+.chip.on { border-color: var(--teal); background: var(--mint); }
+.idea .small { margin-top: 1px; }

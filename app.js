@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.14";
-import { landingHTML } from "./landing.js?v=2026-10-28.14";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.15";
+import { landingHTML } from "./landing.js?v=2026-10-28.15";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -714,23 +714,35 @@ async function decideSpecial(task, kidId, won) {
 }
 
 // Ideias para começar (o pai/mãe escolhe quais quer adicionar).
+// Tarefas: [título, pontos, idade mínima, idade máxima]. Uma criança que faça tudo ganha 30–50 pontos por dia;
+// os prémios vão de 1–2 dias (pequenos) a 1–2 meses (grandes) de esforço.
 const TASK_IDEAS = [
-  [tr("Fazer a cama"), 5], [tr("Arrumar o quarto"), 10], [tr("Lavar os dentes (manhã e noite)"), 5],
-  [tr("Vestir-se sozinho(a)"), 3], [tr("Preparar a mochila para o dia seguinte"), 5], [tr("Fazer os trabalhos de casa"), 10],
-  [tr("Ler 20 minutos"), 10], [tr("Pôr a mesa"), 5], [tr("Levantar a mesa"), 5], [tr("Pôr a roupa suja no cesto"), 3],
-  [tr("Arrumar os brinquedos"), 5], [tr("Tomar banho sem reclamar"), 5], [tr("Comer a fruta e os legumes"), 5],
-  [tr("Dar comida e água ao animal"), 5], [tr("Ir para a cama à hora combinada"), 5], [tr("Arrumar sapatos e casaco ao chegar"), 3],
-  [tr("Levar o lixo ou a reciclagem"), 5], [tr("Praticar instrumento ou desporto (15 min)"), 10],
-  [tr("Ajudar a arrumar a loiça"), 5], [tr("Cumprir o limite de tempo de ecrã"), 10],
+  [tr("Fazer a cama"), 5, 4, 17], [tr("Lavar os dentes (manhã e noite)"), 5, 4, 17], [tr("Vestir-se sozinho(a)"), 3, 4, 8],
+  [tr("Arrumar os brinquedos"), 5, 4, 9], [tr("Pôr a roupa suja no cesto"), 3, 4, 17], [tr("Pôr a mesa"), 5, 5, 17],
+  [tr("Levantar a mesa"), 5, 5, 17], [tr("Comer a fruta e os legumes"), 5, 4, 17], [tr("Tomar banho sem reclamar"), 5, 4, 10],
+  [tr("Ir para a cama à hora combinada"), 5, 4, 17], [tr("Arrumar sapatos e casaco ao chegar"), 3, 4, 17],
+  [tr("Dar comida e água ao animal"), 5, 6, 17], [tr("Preparar a mochila para o dia seguinte"), 5, 6, 17],
+  [tr("Fazer os trabalhos de casa"), 10, 6, 17], [tr("Ler 20 minutos"), 10, 6, 17], [tr("Arrumar o quarto"), 10, 6, 17],
+  [tr("Praticar instrumento ou desporto (15 min)"), 10, 7, 17], [tr("Cumprir o limite de tempo de ecrã"), 10, 7, 17],
+  [tr("Ajudar a arrumar a loiça"), 5, 7, 17], [tr("Levar o lixo ou a reciclagem"), 5, 8, 17],
+  [tr("Estudar para um teste (30 min)"), 15, 9, 17], [tr("Preparar o próprio lanche"), 5, 9, 17],
+  [tr("Estender ou dobrar a roupa"), 10, 10, 17], [tr("Aspirar ou varrer uma divisão"), 10, 10, 17],
 ];
 const REWARD_IDEAS = [
-  [tr("Escolher a sobremesa do jantar"), 30], [tr("15 minutos extra de ecrã"), 30], [tr("Escolher o filme da noite em família"), 50],
-  [tr("Deitar 30 min mais tarde (fim de semana)"), 60], [tr("Gelado ou doce ao fim de semana"), 60], [tr("Escolher o jantar de um dia"), 80],
-  [tr("Vale \"hoje não faço uma tarefa\""), 80], [tr("Pequeno-almoço na cama"), 100], [tr("Noite de jogos de tabuleiro (escolhe o jogo)"), 100],
-  [tr("1 hora extra de consola ao fim de semana"), 120], [tr("Convidar um amigo para brincar cá em casa"), 150],
-  [tr("Ir ao parque ou à praia à escolha"), 150], [tr("Um livro novo"), 250], [tr("Acampar na sala / dormida com amigo"), 300],
-  [tr("Uma tarde a sós com o pai ou a mãe"), 300], [tr("Ida ao cinema"), 400], [tr("Escolher o programa do fim de semana"), 400],
-  [tr("Brinquedo ou jogo até 15 €"), 600], [tr("Ida ao zoo, aquário ou parque de diversões"), 1000], [tr("Prenda maior à escolha (até 40 €)"), 1500],
+  [tr("Escolher a sobremesa do jantar"), 30], [tr("15 minutos extra de ecrã"), 30], [tr("Escolher a música no carro durante uma semana"), 40],
+  [tr("Escolher o filme da noite em família"), 50], [tr("Deitar 30 min mais tarde (fim de semana)"), 60], [tr("Gelado ou doce ao fim de semana"), 60],
+  [tr("Escolher o jantar de um dia"), 80], [tr("Vale \"hoje não faço uma tarefa\""), 80], [tr("Pequeno-almoço na cama"), 100],
+  [tr("Noite de jogos de tabuleiro (escolhe o jogo)"), 100], [tr("1 hora extra de consola ao fim de semana"), 120],
+  [tr("Convidar um amigo para brincar cá em casa"), 150], [tr("Ir ao parque ou à praia à escolha"), 150], [tr("Um livro novo"), 250],
+  [tr("Acampar na sala / dormida com amigo"), 300], [tr("Uma tarde a sós com o pai ou a mãe"), 300], [tr("Ida ao cinema"), 400],
+  [tr("Escolher o programa do fim de semana"), 400], [tr("Brinquedo ou jogo até 15 €"), 600],
+  [tr("Atividade nova à escolha (karting, escalada…)"), 800], [tr("Ida ao zoo, aquário ou parque de diversões"), 1000],
+  [tr("Prenda maior à escolha (até 40 €)"), 1500],
+];
+// Sugestões ao criar uma missão (o pai/mãe pode escrever outra).
+const MISSION_IDEAS = [
+  [tr("Ler um livro inteiro"), 50], [tr("Arrumar e organizar o armário"), 30], [tr("Ajudar a lavar o carro"), 25],
+  [tr("Aprender algo novo (andar de bicicleta, nadar, atar os sapatos…)"), 60],
 ];
 
 /** Registo mais recente de uma tarefa para um filho num dia. */
@@ -1345,7 +1357,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.14";
+const APP_VERSION = "2026-10-28.15";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1494,8 +1506,16 @@ function kidForm(kid) {
       if (!validPin(pin)) throw new Error(tr("O PIN tem de ter 4 a 6 dígitos."));
       data.pinHash = await hashPin(pin);
     }
-    if (kid) await updateDoc(doc(col("kids"), kid.id), data);
-    else await addDoc(col("kids"), { ...data, points: 0, order: S.kids.length, createdAt: serverTimestamp() });
+    if (kid) { await updateDoc(doc(col("kids"), kid.id), data); return; }
+    // Família nova (ainda sem filhos, tarefas nem prémios): a seguir propõe tarefas e prémios para começar.
+    const isNewFamily = !S.kids.length && !S.tasks.length && !S.rewards.length;
+    const ref = await addDoc(col("kids"), { ...data, points: 0, order: S.kids.length, createdAt: serverTimestamp() });
+    if (isNewFamily) {
+      setTimeout(async () => {
+        for (let i = 0; i < 30 && !kidById(ref.id); i++) await new Promise((r) => setTimeout(r, 100));
+        ideasForm("tasks", { starter: true });
+      }, 50);
+    }
   });
   const photo = photoEditor(form, kid?.photo && PHOTO_RE.test(kid.photo) ? kid.photo : null);
   const del = form.querySelector("#delKid");
@@ -1516,7 +1536,10 @@ function taskForm(task, kindDefault = "rec") {
     <label class="inline"><input type="radio" name="kind" value="rec" ${kind === "rec" ? "checked" : ""}> 📅 ${tr("Recorrente (todos os dias)")}</label>
     <label class="inline"><input type="radio" name="kind" value="extra" ${kind === "extra" ? "checked" : ""}> ✨ ${tr("Espontânea (quando acontece)")}</label>
     <label class="inline"><input type="radio" name="kind" value="special" ${kind === "special" ? "checked" : ""}> 🚀 ${tr("Missão (com prazo)")}</label>
-    <div id="deadlineBox"><label>${tr("Até que dia?")}</label><input name="deadline" type="date" min="${today()}" value="${task?.deadline || addDays(today(), 7)}">
+    <div id="deadlineBox">
+      ${task ? "" : `<label>${tr("Sugestões")}</label><div class="chips">${MISSION_IDEAS.map(([t, p], i) => `<button type="button" class="chip" data-mission="${i}">${esc(t)} <b>+${p}</b></button>`).join("")}</div>
+      <p class="small muted">${tr("Toca numa sugestão ou escreve a tua missão em cima.")}</p>`}
+      <label>${tr("Até que dia?")}</label><input name="deadline" type="date" min="${today()}" value="${task?.deadline || addDays(today(), 7)}">
       <p class="small muted">${tr("Os filhos veem um contador até ao fim desse dia. No fim, decides se ganharam os pontos.")}</p></div>
     <label>${tr("Para quem")}</label>
     ${S.kids.length ? S.kids.map((k) => `<label class="inline"><input type="checkbox" name="kids" value="${k.id}" ${!task?.kidIds?.length || task.kidIds.includes(k.id) ? "checked" : ""}> ${avatar(k, "xs")} ${esc(k.name)}</label>`).join("") : `<p class="small muted">${tr("Todos os filhos.")}</p>`}
@@ -1543,6 +1566,12 @@ function taskForm(task, kindDefault = "rec") {
   });
   const syncKind = () => form.querySelector("#deadlineBox").classList.toggle("hidden", form.querySelector("[name=kind]:checked").value !== "special");
   form.querySelectorAll("[name=kind]").forEach((r) => (r.onchange = syncKind));
+  form.querySelectorAll("[data-mission]").forEach((b) => (b.onclick = () => {
+    const [t, p] = MISSION_IDEAS[Number(b.dataset.mission)];
+    // form.title é o atributo "title" do formulário, não o campo.
+    form.querySelector("[name=title]").value = t; form.querySelector("[name=points]").value = p;
+    form.querySelectorAll("[data-mission]").forEach((x) => x.classList.toggle("on", x === b));
+  }));
   syncKind();
   const del = form.querySelector("#delTask");
   // Arquivar em vez de apagar mantém o histórico coerente.
@@ -1554,33 +1583,57 @@ function taskForm(task, kindDefault = "rec") {
 }
 
 /** Lista de ideias para escolher e adicionar de uma vez (os pontos podem ser ajustados antes). */
-function ideasForm(kind) {
+/**
+ * Lista de ideias para escolher e adicionar de uma vez (os pontos podem ser ajustados antes).
+ * As tarefas vêm já marcadas para as idades dos filhos e ficam atribuídas só a quem tem idade para elas.
+ * Com starter (família nova, primeiro filho): tarefas e depois prémios, tudo já marcado.
+ */
+function ideasForm(kind, { starter = false } = {}) {
   const isTasks = kind === "tasks";
   const existing = new Set((isTasks ? S.tasks.filter((t) => t.active !== false) : S.rewards.filter((r) => r.status === "active"))
     .map((x) => x.title.trim().toLowerCase()));
+  const fits = (idea) => (isTasks ? S.kids.filter((k) => { const a = kidAge(k); return a == null || (a >= idea[2] && a <= idea[3]); }) : S.kids);
   const ideas = (isTasks ? TASK_IDEAS : REWARD_IDEAS).filter(([title]) => !existing.has(title.toLowerCase()))
-    .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0], LOCALE));
-  if (!ideas.length) { toast(tr("Já adicionaste todas as ideias.")); return; }
-  const form = openForm(isTasks ? tr("Ideias de tarefas recorrentes") : tr("Ideias de prémios"), `
-    <p class="small muted">${tr("Escolhe as que queres e ajusta os pontos.")} ${isTasks ? tr("Ficam como recorrentes, para todos os filhos.") : ""}</p>
-    <label class="inline" style="font-weight:600"><input type="checkbox" id="pickAll"> ${tr("Selecionar todas")}</label>
-    ${ideas.map(([title, pts], i) => `<div class="row" style="margin:6px 0">
-      <label class="inline grow" style="margin:0"><input type="checkbox" name="pick" value="${i}"> ${esc(title)}</label>
-      <input name="pts${i}" type="number" inputmode="numeric" min="1" value="${pts}" style="width:80px">
-    </div>`).join("")}`,
+    .map((idea) => ({ idea, kids: fits(idea) }))
+    .sort((a, b) => (b.kids.length > 0) - (a.kids.length > 0) || (a.idea[2] ?? 0) - (b.idea[2] ?? 0) || a.idea[1] - b.idea[1] || a.idea[0].localeCompare(b.idea[0], LOCALE));
+  if (!ideas.length) { if (starter && isTasks) return ideasForm("rewards", { starter }); toast(tr("Já adicionaste todas as ideias.")); return; }
+  const allAges = (idea) => !isTasks || (idea[2] <= MIN_AGE + 2 && idea[3] >= MAX_AGE);
+  const who = ({ idea, kids }) => {
+    if (!isTasks) return "";
+    const ages = idea[3] >= MAX_AGE ? tr("{n}+ anos", { n: idea[2] }) : tr("{min}–{max} anos", { min: idea[2], max: idea[3] });
+    const names = kids.length && kids.length < S.kids.length ? ` · ${kids.map((k) => esc(k.name)).join(", ")}` : "";
+    return `<div class="small muted">${ages}${names}</div>`;
+  };
+  const row = (x, i) => `<div class="row idea" style="margin:6px 0">
+      <label class="inline grow" style="margin:0"><input type="checkbox" name="pick" value="${i}" ${(starter || isTasks) && x.kids.length ? "checked" : ""}> <span>${esc(x.idea[0])}${who(x)}</span></label>
+      <input name="pts${i}" type="number" inputmode="numeric" min="1" value="${x.idea[1]}" style="width:80px">
+    </div>`;
+  const fitting = ideas.filter((x) => x.kids.length), other = ideas.filter((x) => !x.kids.length);
+  const title = starter ? (isTasks ? tr("Tarefas para começar") : tr("Prémios para começar")) : isTasks ? tr("Ideias de tarefas recorrentes") : tr("Ideias de prémios");
+  const intro = isTasks
+    ? (S.kids.length ? tr("Já marcámos as tarefas certas para a idade dos teus filhos. Cada uma fica só para quem tem idade para ela. Desmarca as que não quiseres e ajusta os pontos.") : tr("Escolhe as que queres e ajusta os pontos."))
+    : starter ? tr("Prémios para trocar pelos pontos, dos pequenos (1 a 2 dias de tarefas) aos grandes (1 a 2 meses). Desmarca os que não quiseres e ajusta os pontos.") : tr("Escolhe as que queres e ajusta os pontos.");
+  const form = openForm(title, `
+    <p class="small muted">${intro}</p>
+    <label class="inline" style="font-weight:600"><input type="checkbox" id="pickAll" ${starter || (isTasks && !other.length) ? "checked" : ""}> ${tr("Selecionar todas")}</label>
+    ${fitting.map((x) => row(x, ideas.indexOf(x))).join("")}
+    ${other.length ? `<h3 style="margin:14px 0 4px">${tr("Para outras idades")}</h3>${other.map((x) => row(x, ideas.indexOf(x))).join("")}` : ""}`,
   async (fd) => {
     const picked = fd.getAll("pick").map(Number);
-    if (!picked.length) throw new Error(tr("Escolhe pelo menos uma."));
+    if (!picked.length && !starter) throw new Error(tr("Escolhe pelo menos uma."));
     const batch = writeBatch(db);
     for (const i of picked) {
       const pts = readPoints(fd.get(`pts${i}`));
-      const title = ideas[i][0];
+      const { idea, kids } = ideas[i];
+      // Tarefas para todas as idades ficam para todos (incluindo filhos futuros); as outras só para quem tem idade.
+      const kidIds = allAges(idea) || !kids.length ? [] : kids.map((k) => k.id);
       batch.set(doc(col(isTasks ? "tasks" : "rewards")), isTasks
-        ? { title, points: pts, recurring: true, days: [], date: null, kidIds: [], active: true, createdAt: serverTimestamp() }
-        : { title, cost: pts, status: "active", suggestedBy: null, createdAt: serverTimestamp() });
+        ? { title: idea[0], points: pts, recurring: true, days: [], date: null, kidIds, active: true, createdAt: serverTimestamp() }
+        : { title: idea[0], cost: pts, status: "active", suggestedBy: null, createdAt: serverTimestamp() });
     }
-    await batch.commit();
-    toast(isTasks ? tr("{n} tarefa(s) adicionada(s).", { n: picked.length }) : tr("{n} prémio(s) adicionado(s).", { n: picked.length }));
+    if (picked.length) await batch.commit();
+    if (picked.length) toast(isTasks ? tr("{n} tarefa(s) adicionada(s).", { n: picked.length }) : tr("{n} prémio(s) adicionado(s).", { n: picked.length }));
+    if (starter && isTasks) setTimeout(() => ideasForm("rewards", { starter }), 50);
   }, tr("Adicionar"));
   const all = form.querySelector("#pickAll");
   all.onchange = () => form.querySelectorAll("[name=pick]").forEach((c) => (c.checked = all.checked));
