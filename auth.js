@@ -4,7 +4,7 @@ import {
   getAuth, applyActionCode, verifyPasswordResetCode, confirmPasswordReset, connectAuthEmulator,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { firebaseConfig } from "./firebase-config.js";
-import { t as tr } from "./i18n.js?v=2026-10-28.15";
+import { t as tr } from "./i18n.js?v=2026-10-28.16";
 
 const params = new URLSearchParams(location.search);
 const useEmulator = params.has("emulator");
