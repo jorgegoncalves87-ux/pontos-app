@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.15";
-import { landingHTML } from "./landing.js?v=2026-10-28.15";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.16";
+import { landingHTML } from "./landing.js?v=2026-10-28.16";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -572,7 +572,6 @@ function renderSetup() {
       setRole("parent");
       S.tab = "kids";
       render();
-      toast(tr("Família criada! Agora adiciona os teus filhos."));
     });
   };
 }
@@ -636,6 +635,32 @@ const scrollToTop = () => { const el = app.querySelector(".scroll"); if (el) el.
 
 function bindTabs() {
   app.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { S.tab = b.dataset.tab; render(); scrollToTop(); }));
+}
+
+// ---------- Primeiros passos (família nova) ----------
+const isNewFamily = () => !S.kids.length && !S.tasks.length && !S.rewards.length;
+const STEPS = () => [
+  [ICON.kids, tr("Adiciona um filho")],
+  [ICON.tasks, tr("Escolhe as tarefas e os pontos")],
+  [ICON.rewards, tr("Escolhe os prémios e os pontos")],
+];
+/** Barra "1 · 2 · 3" mostrada nas janelas dos primeiros passos. */
+const stepper = (current) => `<ol class="stepper" aria-label="${tr("Primeiros passos")}">${STEPS().map(([ic, label], i) =>
+  `<li class="${i + 1 < current ? "done" : i + 1 === current ? "now" : ""}"><span class="dot">${i + 1 < current ? "✓" : i + 1}</span><span>${label}</span></li>`).join("")}</ol>`;
+/** Cartão de boas-vindas no separador Filhos, enquanto a família ainda não tem filhos. */
+function welcomeCard() {
+  return `<div class="card welcome">
+    <img src="illustrations/mascote.svg" alt="" class="welcome-mascot">
+    <h2>${tr("Vamos começar!")}</h2>
+    <p class="muted">${tr("Em 3 passos a tua família fica pronta a ganhar pontos.")}</p>
+    <ol class="welcome-steps">${STEPS().map(([ic, label], i) => `<li><span class="ic">${ic}</span><span class="n">${i + 1}</span><b>${label}</b><span class="small muted">${[
+      tr("Nome, idade e um PIN secreto."),
+      tr("Já vêm escolhidas a pensar na idade: confirma os pontos de cada uma."),
+      tr("O que se pode ganhar com os pontos: confirma quanto custa cada um."),
+    ][i]}</span></li>`).join("")}</ol>
+    <p class="tip">💡 ${tr("A qualquer momento podes adicionar, mudar ou remover tarefas e prémios.")}</p>
+    <button class="primary block" id="addKid">+ ${tr("Adicionar o primeiro filho")}</button>
+  </div>`;
 }
 
 // ---------- Mascote ----------
@@ -1249,8 +1274,8 @@ function parentKids() {
         <button class="bad" data-penalty="${k.id}">− ${tr("Mau comportamento")}</button>
         <button class="good" data-bonus="${k.id}">+ ${tr("Bónus")}</button>
         <button data-edit-kid="${k.id}">${tr("Editar")}</button></div></div>`).join("")
-    : `<div class="empty">${tr("Ainda não adicionaste filhos.")}</div>`)
-    + `<button class="primary block" id="addKid">+ ${tr("Adicionar filho")}</button>`;
+    : "")
+    + (S.kids.length ? `<button class="primary block" id="addKid">+ ${tr("Adicionar filho")}</button>` : welcomeCard());
 }
 
 function parentTasks() {
@@ -1357,7 +1382,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.15";
+const APP_VERSION = "2026-10-28.16";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1486,7 +1511,7 @@ const kidAge = (kid) => (kid?.birthYear ? new Date().getFullYear() - kid.birthYe
 
 function kidForm(kid) {
   const emoji = kid?.emoji || EMOJIS[S.kids.length % EMOJIS.length];
-  const form = openForm(kid ? tr("Editar {name}", { name: kid.name }) : tr("Novo filho"), `
+  const form = openForm(kid ? tr("Editar {name}", { name: kid.name }) : tr("Novo filho"), `${!kid && isNewFamily() ? stepper(1) : ""}
     <label>${tr("Nome")}</label><input name="name" required maxlength="30" value="${esc(kid?.name || "")}">
     <label>${tr("Idade")}</label><input name="age" type="number" inputmode="numeric" min="${MIN_AGE}" max="${MAX_AGE}" required value="${kidAge(kid) ?? ""}" placeholder="${tr("Ex: 8")}">
     <label>${tr("Foto")}</label>${photoFieldHtml()}
@@ -1508,9 +1533,9 @@ function kidForm(kid) {
     }
     if (kid) { await updateDoc(doc(col("kids"), kid.id), data); return; }
     // Família nova (ainda sem filhos, tarefas nem prémios): a seguir propõe tarefas e prémios para começar.
-    const isNewFamily = !S.kids.length && !S.tasks.length && !S.rewards.length;
+    const firstKid = isNewFamily();
     const ref = await addDoc(col("kids"), { ...data, points: 0, order: S.kids.length, createdAt: serverTimestamp() });
-    if (isNewFamily) {
+    if (firstKid) {
       setTimeout(async () => {
         for (let i = 0; i < 30 && !kidById(ref.id); i++) await new Promise((r) => setTimeout(r, 100));
         ideasForm("tasks", { starter: true });
@@ -1613,8 +1638,9 @@ function ideasForm(kind, { starter = false } = {}) {
   const intro = isTasks
     ? (S.kids.length ? tr("Já marcámos as tarefas certas para a idade dos teus filhos. Cada uma fica só para quem tem idade para ela. Desmarca as que não quiseres e ajusta os pontos.") : tr("Escolhe as que queres e ajusta os pontos."))
     : starter ? tr("Prémios para trocar pelos pontos, dos pequenos (1 a 2 dias de tarefas) aos grandes (1 a 2 meses). Desmarca os que não quiseres e ajusta os pontos.") : tr("Escolhe as que queres e ajusta os pontos.");
-  const form = openForm(title, `
+  const form = openForm(title, `${starter ? stepper(isTasks ? 2 : 3) : ""}
     <p class="small muted">${intro}</p>
+    ${starter ? `<p class="tip small">💡 ${tr("A qualquer momento podes adicionar, mudar ou remover tarefas e prémios.")}</p>` : ""}
     <label class="inline" style="font-weight:600"><input type="checkbox" id="pickAll" ${starter || (isTasks && !other.length) ? "checked" : ""}> ${tr("Selecionar todas")}</label>
     ${fitting.map((x) => row(x, ideas.indexOf(x))).join("")}
     ${other.length ? `<h3 style="margin:14px 0 4px">${tr("Para outras idades")}</h3>${other.map((x) => row(x, ideas.indexOf(x))).join("")}` : ""}`,
@@ -1634,6 +1660,7 @@ function ideasForm(kind, { starter = false } = {}) {
     if (picked.length) await batch.commit();
     if (picked.length) toast(isTasks ? tr("{n} tarefa(s) adicionada(s).", { n: picked.length }) : tr("{n} prémio(s) adicionado(s).", { n: picked.length }));
     if (starter && isTasks) setTimeout(() => ideasForm("rewards", { starter }), 50);
+    if (starter && !isTasks) setTimeout(() => { S.tab = "kids"; render(); toast(tr("Tudo pronto! Para ligar o aparelho de cada filho, vai a ⚙️ Definições.")); }, 50);
   }, tr("Adicionar"));
   const all = form.querySelector("#pickAll");
   all.onchange = () => form.querySelectorAll("[name=pick]").forEach((c) => (c.checked = all.checked));

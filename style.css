@@ -549,3 +549,23 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .chip b { color: var(--primary); }
 .chip.on { border-color: var(--teal); background: var(--mint); }
 .idea .small { margin-top: 1px; }
+
+/* Primeiros passos */
+.welcome { text-align: center; padding: 22px 18px 18px; background: linear-gradient(180deg, var(--sky), #fff 45%); }
+.welcome-mascot { width: 120px; display: block; margin: 0 auto 4px; }
+.welcome h2 { margin: 4px 0 2px; font-size: 1.4rem; }
+.welcome-steps { list-style: none; padding: 0; margin: 16px 0 10px; display: grid; gap: 10px; text-align: left; }
+.welcome-steps li { display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; background: #fff; border: 2px solid #f1eee6; border-radius: 18px; padding: 10px 12px; position: relative; }
+.welcome-steps li:nth-child(1) .ic { background: var(--mint); } .welcome-steps li:nth-child(2) .ic { background: var(--butter); } .welcome-steps li:nth-child(3) .ic { background: var(--pink); }
+.welcome-steps .ic { grid-row: span 2; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--primary); }
+.welcome-steps .ic .icon { width: 26px; height: 26px; }
+.welcome-steps .n { position: absolute; left: 4px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: var(--teal); color: #fff; font-size: .7rem; font-weight: 800; display: grid; place-items: center; }
+.welcome-steps b { font-size: 1rem; }
+.tip { background: var(--butter); border-radius: 14px; padding: 9px 12px; text-align: left; margin: 10px 0 14px; }
+.tip.small { margin: 8px 0; }
+.stepper { list-style: none; display: flex; gap: 6px; padding: 0; margin: 0 0 14px; }
+.stepper li { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: .72rem; line-height: 1.2; color: var(--muted); position: relative; }
+.stepper li:not(:last-child)::after { content: ""; position: absolute; top: 14px; left: calc(50% + 18px); right: calc(-50% + 18px); height: 2px; background: var(--border); }
+.stepper .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: #f3f1f9; color: var(--muted); }
+.stepper li.now { color: var(--text); font-weight: 700; } .stepper li.now .dot { background: var(--teal); color: #fff; box-shadow: 0 0 0 4px var(--mint); }
+.stepper li.done .dot { background: var(--mint); color: var(--primary); } .stepper li.done:not(:last-child)::after { background: var(--teal); }
