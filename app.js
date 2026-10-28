@@ -11,7 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { landingHTML } from "./landing.js?v=2026-10-28.6";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.7";
+import { landingHTML } from "./landing.js?v=2026-10-28.7";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -45,7 +46,6 @@ const S = {
   unsub: [],
 };
 
-const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const EMOJIS = ["🦁", "🐯", "🐼", "🦊", "🐸", "🐵", "🦄", "🐙", "🐧", "🐶", "🐱", "🚀", "⚽", "🎨", "🌟"];
 const LOG_LIMIT = 500;
 
@@ -67,6 +67,7 @@ function forgetJoinLink() {
 }
 const newToken = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const app = document.getElementById("app");
+document.title = tr("SAS Kids — tarefas que valem pontos e prémios");
 
 // Android/Chrome: guardamos o pedido de instalação para o botão "Instalar agora".
 let installPrompt = null;
@@ -81,11 +82,22 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 const pad = (n) => String(n).padStart(2, "0");
 const dateStr = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const today = () => dateStr();
-const fmtDate = (s) => { const [y, m, d] = s.split("-"); return `${d}/${m}`; };
+const DATE_FMT = new Intl.DateTimeFormat(LOCALE, { day: "2-digit", month: "2-digit" });
+const DAY_FMT = new Intl.DateTimeFormat(LOCALE, { weekday: "short" });
+const noon = (s) => new Date(s + "T12:00:00");
+const fmtDate = (s) => DATE_FMT.format(noon(s));
 const addDays = (s, n) => { const [y, m, d] = s.split("-").map(Number); return dateStr(new Date(y, m - 1, d + n)); };
-const weekday = (s) => DAYS[new Date(s + "T12:00:00").getDay()];
+// Em pt-PT o formato "curto" do Intl dá "segunda"; usamos as abreviaturas habituais.
+const PT_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const weekday = (s) => {
+  if (LANG === "pt") return PT_DAYS[noon(s).getDay()];
+  const w = DAY_FMT.format(noon(s)).replace(/\.$/, "");
+  return w.charAt(0).toUpperCase() + w.slice(1);
+};
 /** "Hoje", "Ontem" ou "Qua 14/10". */
-const dayLabel = (s) => (s === today() ? "Hoje" : s === addDays(today(), -1) ? "Ontem" : `${weekday(s)} ${fmtDate(s)}`);
+const dayLabel = (s) => (s === today() ? tr("Hoje") : s === addDays(today(), -1) ? tr("Ontem") : `${weekday(s)} ${fmtDate(s)}`);
+/** Fuso horário deste aparelho: o lembrete das 19:45 usa o da família. */
+const TIMEZONE = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Lisbon"; } catch { return "Europe/Lisbon"; } })();
 const DEFAULT_BACK_DAYS = 3;
 const MAX_BACK_DAYS = 14;
 /** Quantos dias para trás os filhos podem marcar tarefas (definido pelo pai/mãe). */
@@ -100,7 +112,7 @@ const parentAvatar = (cls = "") => avatar({ photo: S.fam?.parentPhoto, emoji: "�
 const avatar = (k, cls = "") => (k.photo && PHOTO_RE.test(k.photo)
   ? `<img class="avatar ${cls}" src="${k.photo}" alt="">`
   : `<span class="avatar-emoji ${cls}">${esc(k.emoji)}</span>`);
-const STATUS_LABEL = { pending: "Por validar", approved: "Aprovado", rejected: "Rejeitado" };
+const STATUS_LABEL = { pending: tr("Por validar"), approved: tr("Aprovado"), rejected: tr("Rejeitado") };
 const statusPill = (s) => `<span class="pill ${s}">${STATUS_LABEL[s]}</span>`;
 
 async function hashPin(pin) {
@@ -120,17 +132,17 @@ function toast(msg) {
 }
 
 async function guard(fn) {
-  try { await fn(); } catch (e) { console.error(e); toast(e.message || "Ocorreu um erro."); }
+  try { await fn(); } catch (e) { console.error(e); toast(e.message || tr("Ocorreu um erro.")); }
 }
 
 // ---------- Modal ----------
 const modal = document.getElementById("modal");
 function closeModal() { modal.classList.add("hidden"); modal.innerHTML = ""; }
 /** Abre um formulário; onSubmit recebe os valores e pode lançar erro para mostrar na própria janela. */
-function openForm(title, bodyHtml, onSubmit, submitLabel = "Guardar") {
+function openForm(title, bodyHtml, onSubmit, submitLabel = tr("Guardar")) {
   modal.innerHTML = `<form class="sheet"><h2 style="margin-top:0">${esc(title)}</h2>${bodyHtml}
     <div class="err"></div>
-    <div class="actions"><button type="button" data-close>Cancelar</button><button class="primary" type="submit">${esc(submitLabel)}</button></div></form>`;
+    <div class="actions"><button type="button" data-close>${tr("Cancelar")}</button><button class="primary" type="submit">${esc(submitLabel)}</button></div></form>`;
   modal.classList.remove("hidden");
   const form = modal.querySelector("form");
   form.querySelector("[data-close]").onclick = closeModal;
@@ -145,7 +157,7 @@ function openForm(title, bodyHtml, onSubmit, submitLabel = "Guardar") {
       closeModal();
     } catch (e) {
       console.error(e);
-      form.querySelector(".err").textContent = e.message || "Ocorreu um erro.";
+      form.querySelector(".err").textContent = e.message || tr("Ocorreu um erro.");
       btn.disabled = false;
     }
   };
@@ -162,23 +174,28 @@ modal.addEventListener("click", (e) => {
 
 function askPin(title, check) {
   openForm(title, `<input name="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="PIN" style="font-size:1.6rem;text-align:center;letter-spacing:.4em">`,
-    async (fd) => { await check(fd.get("pin")); }, "Entrar");
+    async (fd) => { await check(fd.get("pin")); }, tr("Entrar"));
 }
 
 // ---------- Ciclo de vida ----------
 function stopListeners() { S.unsub.forEach((u) => u()); S.unsub = []; }
 
 /** Ordena sempre por pontos (do menor para o maior) e, em empate, por nome. */
-const byValue = (field) => (a, b) => (a[field] ?? 0) - (b[field] ?? 0) || a.title.localeCompare(b.title, "pt");
+const byValue = (field) => (a, b) => (a[field] ?? 0) - (b[field] ?? 0) || a.title.localeCompare(b.title, LOCALE);
 
 function startListeners() {
   stopListeners();
   const onErr = (e) => {
     console.error(e);
     if (e.code === "permission-denied" && isDevice()) return unlinkDevice("revoked");
-    toast("Erro a ler dados: " + e.code);
+    toast(tr("Erro a ler dados: {code}", { code: e.code }));
   };
-  S.unsub.push(onSnapshot(famDoc(), (snap) => { S.fam = snap.exists() ? snap.data() : null; render(); }, onErr));
+  S.unsub.push(onSnapshot(famDoc(), (snap) => {
+    S.fam = snap.exists() ? snap.data() : null;
+    // A língua escolhida pelos pais vale para todos os aparelhos da família.
+    if (S.fam?.lang && LANGS[S.fam.lang] && S.fam.lang !== LANG && setLang(S.fam.lang)) return location.reload();
+    render();
+  }, onErr));
   S.unsub.push(onSnapshot(col("kids"), (snap) => {
     S.kidsLoaded = true;
     S.kids = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name));
@@ -282,17 +299,17 @@ async function sha256hex(text) {
 }
 
 async function pushToken() {
-  if (!vapidKey) throw new Error("As notificações ainda não estão configuradas (falta a chave Web Push).");
+  if (!vapidKey) throw new Error(tr("As notificações ainda não estão configuradas (falta a chave Web Push)."));
   if (!(await messagingSupported().catch(() => false)) || !("serviceWorker" in navigator)) {
     throw new Error(isIOS() && !isStandalone()
-      ? "No iPhone, primeiro adiciona a app ao ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a a partir do ícone."
-      : "Este navegador não suporta notificações.");
+      ? tr("No iPhone, primeiro adiciona a app ao ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a a partir do ícone.")
+      : tr("Este navegador não suporta notificações."));
   }
   const perm = await Notification.requestPermission();
-  if (perm !== "granted") throw new Error("As notificações foram bloqueadas. Ativa-as nas definições do telemóvel para esta app.");
+  if (perm !== "granted") throw new Error(tr("As notificações foram bloqueadas. Ativa-as nas definições do telemóvel para esta app."));
   const reg = await navigator.serviceWorker.register("./sw.js");
   const token = await getToken(getMessaging(fbApp), { vapidKey, serviceWorkerRegistration: reg });
-  if (!token) throw new Error("Não foi possível ativar as notificações.");
+  if (!token) throw new Error(tr("Não foi possível ativar as notificações."));
   return token;
 }
 
@@ -302,7 +319,7 @@ async function togglePush(who) {
     const id = localStorage.getItem(pushKey(who));
     await updateDoc(doc(col("pushTokens"), id), who === "parent" ? { parent: false } : { kids: arrayRemove(who) }).catch(() => {});
     try { localStorage.removeItem(pushKey(who)); } catch {}
-    toast("Notificações desligadas neste aparelho.");
+    toast(tr("Notificações desligadas neste aparelho."));
   } else {
     const token = await pushToken();
     const id = (await sha256hex(token)).slice(0, 40);
@@ -311,11 +328,11 @@ async function togglePush(who) {
       ...(who === "parent" ? { parent: true } : { kids: arrayUnion(who) }),
     }, { merge: true });
     try { localStorage.setItem(pushKey(who), id); } catch {}
-    toast("Notificações ligadas! 🔔");
+    toast(tr("Notificações ligadas! 🔔"));
   }
   render();
 }
-const bellButton = (who) => `<button class="link" id="bell" title="Notificações">${pushOn(who) ? "🔔" : "🔕"}</button>`;
+const bellButton = (who) => `<button class="link" id="bell" title="${tr("Notificações")}">${pushOn(who) ? "🔔" : "🔕"}</button>`;
 
 // ---------- Render principal ----------
 function render() {
@@ -325,15 +342,15 @@ function render() {
     delete app.dataset.view;
   }
   if (!configured) return renderNotConfigured();
-  if (S.joining) { app.innerHTML = `<div class="center muted">A ligar este aparelho…</div>`; return; }
+  if (S.joining) { app.innerHTML = `<div class="center muted">${tr("A ligar este aparelho…")}</div>`; return; }
   if (!S.user) return renderLogin();
   if (!S.familyId) return renderNotLinked();
-  if (S.fam === undefined) { app.innerHTML = `<div class="center muted">A carregar…</div>`; return; }
+  if (S.fam === undefined) { app.innerHTML = `<div class="center muted">${tr("A carregar…")}</div>`; return; }
   if (S.fam === null) return renderSetup();
   if (S.role && S.role !== "parent" && !kidById(S.role)) {
     // O perfil guardado já não existe (ou os filhos ainda estão a carregar).
     if (S.kidsLoaded) setRole(null);
-    else { app.innerHTML = `<div class="center muted">A carregar…</div>`; }
+    else { app.innerHTML = `<div class="center muted">${tr("A carregar…")}</div>`; }
     return;
   }
   if (!S.role) return renderProfiles();
@@ -343,12 +360,12 @@ function render() {
 
 function renderNotLinked() {
   const msg = S.linkError === "revoked"
-    ? "Este aparelho foi desligado pelo pai/mãe."
-    : S.linkError === "invalid" ? "Este link de ligação já não é válido." : "Este aparelho ainda não está ligado à família.";
+    ? tr("Este aparelho foi desligado pelo pai/mãe.")
+    : S.linkError === "invalid" ? tr("Este link de ligação já não é válido.") : tr("Este aparelho ainda não está ligado à família.");
   app.innerHTML = `<div class="card" style="max-width:420px;margin:40px auto 0;text-align:center">
     <img src="illustrations/mascote.svg" alt="" style="width:120px"><img src="illustrations/logo-texto.svg" alt="SAS Kids" style="display:block;height:34px;margin:8px auto 12px"><p>${msg}</p>
-    <p class="muted">Pede ao pai/mãe um link novo: na app, ⚙️ Definições → <b>Ligar aparelho de um filho</b>.</p>
-    <button class="link" id="toLogin">Sou o pai/mãe: entrar com email</button></div>`;
+    <p class="muted">${tr("Pede ao pai/mãe um link novo: na app, ⚙️ Definições → <b>Ligar aparelho de um filho</b>.")}</p>
+    <button class="link" id="toLogin">${tr("Sou o pai/mãe: entrar com email")}</button></div>`;
   document.getElementById("toLogin").onclick = () => { forgetJoinLink(); signOut(auth); };
 }
 
@@ -381,6 +398,7 @@ function renderLogin() {
   app.querySelectorAll("[data-os]").forEach((b) => (b.onclick = () => showOs(b.dataset.os)));
   if (app.querySelector("[data-os]")) showOs(isIOS() ? "ios" : "android");
   showInstallNow();
+  app.querySelectorAll(".lang-sel").forEach((sel) => (sel.onchange = () => { setLang(sel.value); location.reload(); }));
   const ib = document.getElementById("installBtn");
   if (ib) ib.onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; showInstallNow(); };
 
@@ -394,8 +412,8 @@ function renderLogin() {
   };
   document.getElementById("forgot").onclick = async () => {
     const email = login.email.value.trim();
-    if (!email) { loginErr.textContent = "Escreve primeiro o email."; return; }
-    try { await sendPasswordResetEmail(auth, email); toast("Enviámos um email para recuperares a password."); }
+    if (!email) { loginErr.textContent = tr("Escreve primeiro o email."); return; }
+    try { await sendPasswordResetEmail(auth, email); toast(tr("Enviámos um email para recuperares a password.")); }
     catch (e) { loginErr.textContent = authError(e.code); }
   };
 
@@ -404,7 +422,7 @@ function renderLogin() {
   reg.onsubmit = async (ev) => {
     ev.preventDefault();
     regErr.textContent = "";
-    if (reg.password.value !== reg.password2.value) { regErr.textContent = "As passwords não coincidem."; return; }
+    if (reg.password.value !== reg.password2.value) { regErr.textContent = tr("As passwords não coincidem."); return; }
     try { await createUserWithEmailAndPassword(auth, reg.email.value.trim(), reg.password.value); }
     catch (e) { regErr.textContent = authError(e.code); }
   };
@@ -412,64 +430,65 @@ function renderLogin() {
 
 function authError(code) {
   return ({
-    "auth/invalid-credential": "Email ou password errados.",
-    "auth/wrong-password": "Email ou password errados.",
-    "auth/user-not-found": "Email ou password errados.",
-    "auth/email-already-in-use": "Já existe uma conta com este email. Usa \"Entrar\".",
-    "auth/weak-password": "A password tem de ter pelo menos 6 caracteres.",
-    "auth/invalid-email": "Email inválido.",
-    "auth/too-many-requests": "Demasiadas tentativas. Tenta daqui a pouco.",
-    "auth/operation-not-allowed": "Ativa o login por Email/Password na consola do Firebase.",
-  })[code] || `Erro: ${code}`;
+    "auth/invalid-credential": tr("Email ou password errados."),
+    "auth/wrong-password": tr("Email ou password errados."),
+    "auth/user-not-found": tr("Email ou password errados."),
+    "auth/email-already-in-use": tr("Já existe uma conta com este email. Usa \"Entrar\"."),
+    "auth/weak-password": tr("A password tem de ter pelo menos 6 caracteres."),
+    "auth/invalid-email": tr("Email inválido."),
+    "auth/too-many-requests": tr("Demasiadas tentativas. Tenta daqui a pouco."),
+    "auth/operation-not-allowed": tr("Ativa o login por Email/Password na consola do Firebase."),
+    "auth/network-request-failed": tr("Sem ligação à internet. Tenta outra vez."),
+  })[code] || tr("Erro: {code}", { code });
 }
 
 function renderSetup() {
   app.innerHTML = `<div style="max-width:480px;margin:20px auto 0">${BRAND}
-    <h1>Configurar a família</h1>
-    <p class="muted">O PIN do pai/mãe protege a área de gestão. Os filhos não o devem saber.</p>
+    <h1>${tr("Configurar a família")}</h1>
+    <p class="muted">${tr("O PIN do pai/mãe protege a área de gestão. Os filhos não o devem saber.")}</p>
     <form class="card" id="setupForm">
-      <label>PIN do pai/mãe (4 a 6 dígitos)</label>
+      <label>${tr("PIN do pai/mãe (4 a 6 dígitos)")}</label>
       <input name="pin" type="password" inputmode="numeric" maxlength="6" required>
-      <label>Repetir PIN</label>
+      <label>${tr("Repetir PIN")}</label>
       <input name="pin2" type="password" inputmode="numeric" maxlength="6" required>
       <div class="err" id="setupErr"></div>
-      <button class="primary block" type="submit">Continuar</button>
+      <button class="primary block" type="submit">${tr("Continuar")}</button>
     </form>
-    <button class="link" id="logout">Sair da conta</button></div>`;
+    <button class="link" id="logout">${tr("Sair da conta")}</button></div>`;
   document.getElementById("logout").onclick = () => signOut(auth);
   const form = document.getElementById("setupForm");
   form.onsubmit = async (ev) => {
     ev.preventDefault();
     const pin = form.pin.value, pin2 = form.pin2.value;
     const err = document.getElementById("setupErr");
-    if (!validPin(pin)) { err.textContent = "O PIN tem de ter 4 a 6 dígitos."; return; }
-    if (pin !== pin2) { err.textContent = "Os PINs não coincidem."; return; }
+    if (!validPin(pin)) { err.textContent = tr("O PIN tem de ter 4 a 6 dígitos."); return; }
+    if (pin !== pin2) { err.textContent = tr("Os PINs não coincidem."); return; }
     await guard(async () => {
-      await setDoc(famDoc(), { parentPinHash: await hashPin(pin), createdAt: serverTimestamp() });
+      await setDoc(famDoc(), { parentPinHash: await hashPin(pin), lang: LANG, tz: TIMEZONE, createdAt: serverTimestamp() });
       setRole("parent");
       S.tab = "kids";
       render();
-      toast("Família criada! Agora adiciona os teus filhos.");
+      toast(tr("Família criada! Agora adiciona os teus filhos."));
     });
   };
 }
 
 function renderProfiles() {
-  app.innerHTML = `${BRAND}<div class="who"><img src="illustrations/mascote.svg" alt="" class="who-mascot"></div><div class="header"><h1>Quem és tu?</h1><button class="link" id="logout">${isDevice() ? "Desligar" : "Sair"}</button></div>
+  app.innerHTML = `${BRAND}<div class="who"><img src="illustrations/mascote.svg" alt="" class="who-mascot"></div><div class="header"><h1>${tr("Quem és tu?")}</h1><button class="link" id="logout">${isDevice() ? tr("Desligar") : tr("Sair")}</button></div>
     <div class="profiles">
       ${S.kids.map((k) => `<button class="profile" data-kid="${k.id}"><span class="emoji">${avatar(k, "lg")}</span>${esc(k.name)}</button>`).join("")}
-      <button class="profile" data-parent><span class="emoji">${parentAvatar("lg")}</span>Pai / Mãe</button>
+      <button class="profile" data-parent><span class="emoji">${parentAvatar("lg")}</span>${tr("Pai / Mãe")}</button>
     </div>
-    ${S.kids.length ? "" : `<p class="muted" style="margin-top:16px">Ainda não há filhos. Entra como pai/mãe para os adicionar.</p>`}`;
+    ${S.kids.length ? "" : `<p class="muted" style="margin-top:16px">${tr("Ainda não há filhos. Entra como pai/mãe para os adicionar.")}</p>`}`;
   document.getElementById("logout").onclick = () => leaveDevice();
-  app.querySelector("[data-parent]").onclick = () => askPin("PIN do pai/mãe", async (pin) => {
-    if ((await hashPin(pin)) !== S.fam.parentPinHash) throw new Error("PIN errado.");
+  app.querySelector("[data-parent]").onclick = () => askPin(tr("PIN do pai/mãe"), async (pin) => {
+    if ((await hashPin(pin)) !== S.fam.parentPinHash) throw new Error(tr("PIN errado."));
     setRole("parent");
   });
   app.querySelectorAll("[data-kid]").forEach((b) => (b.onclick = () => {
     const kid = kidById(b.dataset.kid);
-    askPin(`Olá ${kid.name}! Qual é o teu PIN?`, async (pin) => {
-      if ((await hashPin(pin)) !== kid.pinHash) throw new Error("PIN errado.");
+    askPin(tr("Olá {name}! Qual é o teu PIN?", { name: kid.name }), async (pin) => {
+      if ((await hashPin(pin)) !== kid.pinHash) throw new Error(tr("PIN errado."));
       setRole(kid.id);
     });
   }));
@@ -544,7 +563,7 @@ const undecidedSpecials = () => S.tasks.filter((t) => t.active !== false && isSp
   .flatMap((t) => kidsOf(t).filter((k) => !specialEntry(k.id, t.id)).map((k) => ({ t, k })));
 
 function countdownText(ms) {
-  if (ms <= 0) return "Terminou";
+  if (ms <= 0) return tr("Terminou");
   const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
   return `${d ? `${d}d ` : ""}${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
 }
@@ -553,7 +572,7 @@ setInterval(() => {
   let ended = false;
   document.querySelectorAll("[data-deadline]").forEach((el) => {
     const left = Number(el.dataset.deadline) - Date.now();
-    if (left <= 0 && el.textContent !== "Terminou") ended = true;
+    if (left <= 0 && el.textContent !== tr("Terminou")) ended = true;
     el.textContent = countdownText(left);
   });
   if (ended) render();
@@ -564,7 +583,7 @@ async function decideSpecial(task, kidId, won) {
   await runTransaction(db, async (tx) => {
     const kRef = doc(col("kids"), kidId);
     const k = await tx.get(kRef);
-    if (!k.exists()) throw new Error("Este filho já não existe.");
+    if (!k.exists()) throw new Error(tr("Este filho já não existe."));
     const cur = k.data().points || 0;
     const next = won ? Math.max(0, cur + task.points) : cur;
     if (won) tx.update(kRef, { points: next });
@@ -577,22 +596,22 @@ async function decideSpecial(task, kidId, won) {
 
 // Ideias para começar (o pai/mãe escolhe quais quer adicionar).
 const TASK_IDEAS = [
-  ["Fazer a cama", 5], ["Arrumar o quarto", 10], ["Lavar os dentes (manhã e noite)", 5],
-  ["Vestir-se sozinho(a)", 3], ["Preparar a mochila para o dia seguinte", 5], ["Fazer os trabalhos de casa", 10],
-  ["Ler 20 minutos", 10], ["Pôr a mesa", 5], ["Levantar a mesa", 5], ["Pôr a roupa suja no cesto", 3],
-  ["Arrumar os brinquedos", 5], ["Tomar banho sem reclamar", 5], ["Comer a fruta e os legumes", 5],
-  ["Dar comida e água ao animal", 5], ["Ir para a cama à hora combinada", 5], ["Arrumar sapatos e casaco ao chegar", 3],
-  ["Levar o lixo ou a reciclagem", 5], ["Praticar instrumento ou desporto (15 min)", 10],
-  ["Ajudar a arrumar a loiça", 5], ["Cumprir o limite de tempo de ecrã", 10],
+  [tr("Fazer a cama"), 5], [tr("Arrumar o quarto"), 10], [tr("Lavar os dentes (manhã e noite)"), 5],
+  [tr("Vestir-se sozinho(a)"), 3], [tr("Preparar a mochila para o dia seguinte"), 5], [tr("Fazer os trabalhos de casa"), 10],
+  [tr("Ler 20 minutos"), 10], [tr("Pôr a mesa"), 5], [tr("Levantar a mesa"), 5], [tr("Pôr a roupa suja no cesto"), 3],
+  [tr("Arrumar os brinquedos"), 5], [tr("Tomar banho sem reclamar"), 5], [tr("Comer a fruta e os legumes"), 5],
+  [tr("Dar comida e água ao animal"), 5], [tr("Ir para a cama à hora combinada"), 5], [tr("Arrumar sapatos e casaco ao chegar"), 3],
+  [tr("Levar o lixo ou a reciclagem"), 5], [tr("Praticar instrumento ou desporto (15 min)"), 10],
+  [tr("Ajudar a arrumar a loiça"), 5], [tr("Cumprir o limite de tempo de ecrã"), 10],
 ];
 const REWARD_IDEAS = [
-  ["Escolher a sobremesa do jantar", 30], ["15 minutos extra de ecrã", 30], ["Escolher o filme da noite em família", 50],
-  ["Deitar 30 min mais tarde (fim de semana)", 60], ["Gelado ou doce ao fim de semana", 60], ["Escolher o jantar de um dia", 80],
-  ["Vale \"hoje não faço uma tarefa\"", 80], ["Pequeno-almoço na cama", 100], ["Noite de jogos de tabuleiro (escolhe o jogo)", 100],
-  ["1 hora extra de consola ao fim de semana", 120], ["Convidar um amigo para brincar cá em casa", 150],
-  ["Ir ao parque ou à praia à escolha", 150], ["Um livro novo", 250], ["Acampar na sala / dormida com amigo", 300],
-  ["Uma tarde a sós com o pai ou a mãe", 300], ["Ida ao cinema", 400], ["Escolher o programa do fim de semana", 400],
-  ["Brinquedo ou jogo até 15 €", 600], ["Ida ao zoo, aquário ou parque de diversões", 1000], ["Prenda maior à escolha (até 40 €)", 1500],
+  [tr("Escolher a sobremesa do jantar"), 30], [tr("15 minutos extra de ecrã"), 30], [tr("Escolher o filme da noite em família"), 50],
+  [tr("Deitar 30 min mais tarde (fim de semana)"), 60], [tr("Gelado ou doce ao fim de semana"), 60], [tr("Escolher o jantar de um dia"), 80],
+  [tr("Vale \"hoje não faço uma tarefa\""), 80], [tr("Pequeno-almoço na cama"), 100], [tr("Noite de jogos de tabuleiro (escolhe o jogo)"), 100],
+  [tr("1 hora extra de consola ao fim de semana"), 120], [tr("Convidar um amigo para brincar cá em casa"), 150],
+  [tr("Ir ao parque ou à praia à escolha"), 150], [tr("Um livro novo"), 250], [tr("Acampar na sala / dormida com amigo"), 300],
+  [tr("Uma tarde a sós com o pai ou a mãe"), 300], [tr("Ida ao cinema"), 400], [tr("Escolher o programa do fim de semana"), 400],
+  [tr("Brinquedo ou jogo até 15 €"), 600], [tr("Ida ao zoo, aquário ou parque de diversões"), 1000], [tr("Prenda maior à escolha (até 40 €)"), 1500],
 ];
 
 /** Registo mais recente de uma tarefa para um filho num dia. */
@@ -610,16 +629,16 @@ async function approveEntry(entryId, pointsOverride = null) {
   await runTransaction(db, async (tx) => {
     const eRef = doc(col("log"), entryId);
     const e = await tx.get(eRef);
-    if (!e.exists() || e.data().status !== "pending") throw new Error("Este pedido já foi tratado.");
+    if (!e.exists() || e.data().status !== "pending") throw new Error(tr("Este pedido já foi tratado."));
     const entry = e.data();
     const kRef = doc(col("kids"), entry.kidId);
     const k = await tx.get(kRef);
-    if (!k.exists()) throw new Error("Este filho já não existe.");
+    if (!k.exists()) throw new Error(tr("Este filho já não existe."));
     const cur = k.data().points || 0;
     // Nos extras sugeridos pelos filhos, os pontos são os que o pai/mãe decide ao aprovar.
-    if (entry.type === "extra" && pointsOverride == null) throw new Error("Usa \"Dar pontos\" para decidir quantos pontos vale.");
+    if (entry.type === "extra" && pointsOverride == null) throw new Error(tr("Usa \"Dar pontos\" para decidir quantos pontos vale."));
     const points = pointsOverride ?? entry.points;
-    if (entry.type === "reward" && cur < Math.abs(points)) throw new Error("Saldo insuficiente para esta recompensa.");
+    if (entry.type === "reward" && cur < Math.abs(points)) throw new Error(tr("Saldo insuficiente para esta recompensa."));
     const next = Math.max(0, cur + points);
     tx.update(kRef, { points: next });
     tx.update(eRef, { status: "approved", points, applied: next - cur, decidedAt: serverTimestamp() });
@@ -635,7 +654,7 @@ async function adjustPoints(kidId, points, title) {
   await runTransaction(db, async (tx) => {
     const kRef = doc(col("kids"), kidId);
     const k = await tx.get(kRef);
-    if (!k.exists()) throw new Error("Este filho já não existe.");
+    if (!k.exists()) throw new Error(tr("Este filho já não existe."));
     const cur = k.data().points || 0;
     const next = Math.max(0, cur + points);
     tx.update(kRef, { points: next });
@@ -683,21 +702,21 @@ function weekChart(kid) {
     const { gain, loss } = cur[d];
     const x = i * slot + (slot - bw) / 2;
     const gh = gain * k, lh = loss * k;
-    const label = d === today() ? "Hoje" : weekday(d);
+    const label = d === today() ? tr("Hoje") : weekday(d);
     return `<g>
       <path class="bar-gain" d="${barPath(x, zeroY - gh - 1, bw, gh, true)}"/>
       <path class="bar-loss" d="${barPath(x, zeroY + 1, bw, lh, false)}"/>
       <text x="${i * slot + slot / 2}" y="${H - 5}" text-anchor="middle" class="axis${d === today() ? " now" : ""}">${label}</text>
       <rect class="hit" x="${i * slot}" y="0" width="${slot}" height="${H}" data-chart-day data-kid="${kid.id}"
-        data-text="${esc(`${dayLabel(d)}: ${gain ? `+${gain} ganhos` : "nada ganho"}${loss ? ` · −${loss} perdidos` : ""}`)}"/>
+        data-text="${esc(`${dayLabel(d)}: ${gain ? tr("+{n} ganhos", { n: gain }) : tr("nada ganho")}${loss ? ` · ${tr("−{n} perdidos", { n: loss })}` : ""}`)}"/>
     </g>`;
   }).join("");
-  const summary = `Últimos 7 dias: ${fmt(week)} pontos. ${days.map((d) => `${dayLabel(d)} +${cur[d].gain}${cur[d].loss ? ` −${cur[d].loss}` : ""}`).join(", ")}.`;
+  const summary = `${tr("Últimos 7 dias: {n} pontos.", { n: fmt(week) })} ${days.map((d) => `${dayLabel(d)} +${cur[d].gain}${cur[d].loss ? ` −${cur[d].loss}` : ""}`).join(", ")}.`;
   return `<div class="chart">
     <div class="row spread wrap">
-      <div><b>Últimos 7 dias: ${fmt(week)}</b>
-        <div class="small muted">${diff === 0 ? "Igual aos 7 dias anteriores" : `${diff > 0 ? "▲" : "▼"} ${Math.abs(diff)} vs. 7 dias anteriores (${fmt(last)})`}</div></div>
-      <div class="legend small"><span><i class="sw gain"></i>Ganhos</span><span><i class="sw loss"></i>Perdidos</span></div>
+      <div><b>${tr("Últimos 7 dias: {n}", { n: fmt(week) })}</b>
+        <div class="small muted">${diff === 0 ? tr("Igual aos 7 dias anteriores") : tr("{arrow} {n} vs. 7 dias anteriores ({last})", { arrow: diff > 0 ? "▲" : "▼", n: Math.abs(diff), last: fmt(last) })}</div></div>
+      <div class="legend small"><span><i class="sw gain"></i>${tr("Ganhos")}</span><span><i class="sw loss"></i>${tr("Perdidos")}</span></div>
     </div>
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(summary)}">
       <line class="grid" x1="0" x2="${W}" y1="${top}" y2="${top}"/>
@@ -705,7 +724,7 @@ function weekChart(kid) {
       ${cols}
       <line class="base" x1="0" x2="${W}" y1="${zeroY}" y2="${zeroY}"/>
     </svg>
-    <div class="small muted chart-cap" id="cap-${kid.id}">Toca numa barra para ver o dia.</div>
+    <div class="small muted chart-cap" id="cap-${kid.id}">${tr("Toca numa barra para ver o dia.")}</div>
   </div>`;
 }
 
@@ -721,20 +740,21 @@ function weekNet(kidId) {
  */
 function siblingsSummary(me = null) {
   if (S.kids.length < 2) return "";
-  const rows = S.kids.map((k) => ({ k, net: weekNet(k.id) })).sort((a, b) => b.net - a.net || a.k.name.localeCompare(b.k.name, "pt"));
+  const rows = S.kids.map((k) => ({ k, net: weekNet(k.id) })).sort((a, b) => b.net - a.net || a.k.name.localeCompare(b.k.name, LOCALE));
   const max = Math.max(1, ...rows.map((r) => Math.abs(r.net)));
   const fmt = (n) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : "0");
   const myNet = me ? weekNet(me.id) : 0;
   const compare = (r) => {
     if (!me || r.k.id === me.id) return "";
     const d = myNet - r.net;
-    return `<div class="small muted">${d === 0 ? `Estás empatado com ${esc(r.k.name)}` : `Estás <b>${d > 0 ? "▲" : "▼"} ${Math.abs(d)} pontos ${d > 0 ? "acima" : "abaixo"}</b> d${/a$/i.test(r.k.name) ? "a" : "o"} ${esc(r.k.name)}`}</div>`;
+    const v = { name: esc(r.k.name), n: Math.abs(d) };
+    return `<div class="small muted">${d === 0 ? tr("Estás empatado com {name}", v) : d > 0 ? tr("Estás <b>▲ {n} pontos acima</b> de {name}", v) : tr("Estás <b>▼ {n} pontos abaixo</b> de {name}", v)}</div>`;
   };
   return `<div class="card sibs">
-    <div class="small muted" style="margin-bottom:8px">Pontos ganhos menos perdidos nos últimos 7 dias</div>
+    <div class="small muted" style="margin-bottom:8px">${tr("Pontos ganhos menos perdidos nos últimos 7 dias")}</div>
     ${rows.map((r) => `<div class="sib ${me && r.k.id === me.id ? "me" : ""}">
       <div class="row">${avatar(r.k, "sm")}
-        <div class="grow"><b>${esc(r.k.name)}${me && r.k.id === me.id ? " (tu)" : ""}</b>${compare(r)}</div>
+        <div class="grow"><b>${esc(r.k.name)}${me && r.k.id === me.id ? ` ${tr("(tu)")}` : ""}</b>${compare(r)}</div>
         <span class="pts">${fmt(r.net)}</span></div>
       <div class="sib-track"><i class="${r.net < 0 ? "neg" : ""}" style="width:${Math.round((Math.abs(r.net) / max) * 100)}%"></i></div>
     </div>`).join("")}
@@ -759,16 +779,16 @@ const CORRECTABLE = ["task", "extra", "bonus", "penalty", "special"];
 function historyItem(e, showKid, editable = false) {
   const icon = { task: "✅", reward: "🎁", penalty: "⚠️", bonus: "🌟", extra: "💡", special: "🚀" }[e.type] || "•";
   const floorNote = e.status === "approved" && e.applied !== undefined && e.applied !== e.points
-    ? `<div class="small muted">Aplicado: ${e.applied} (o saldo não desce abaixo de 0)</div>` : "";
+    ? `<div class="small muted">${tr("Aplicado: {n} (o saldo não desce abaixo de 0)", { n: e.applied })}</div>` : "";
   // Um extra à espera ainda não tem pontos: mostra os que o filho pediu.
   const pts = e.type === "extra" && e.status === "pending"
-    ? `<span class="pts">${e.suggested ? `pede ${e.suggested}` : "?"}</span>` : ptsHtml(e.points);
+    ? `<span class="pts">${e.suggested ? tr("pede {n}", { n: e.suggested }) : "?"}</span>` : ptsHtml(e.points);
   const canFix = editable && ["approved", "rejected"].includes(e.status) && CORRECTABLE.includes(e.type);
   return `<div class="card row">
     <div style="font-size:1.4rem">${icon}</div>
     <div class="grow"><div><b>${esc(e.title)}</b></div>
-      <div class="small muted">${fmtDate(e.date)}${showKid ? " · " + esc(kidName(e.kidId)) : ""}${e.corrected ? " · corrigido" : ""}</div>${floorNote}
-      ${canFix ? `<button class="link" style="padding:4px 0" data-fix="${e.id}">Corrigir pontos</button>` : ""}</div>
+      <div class="small muted">${fmtDate(e.date)}${showKid ? " · " + esc(kidName(e.kidId)) : ""}${e.corrected ? ` · ${tr("corrigido")}` : ""}</div>${floorNote}
+      ${canFix ? `<button class="link" style="padding:4px 0" data-fix="${e.id}">${tr("Corrigir pontos")}</button>` : ""}</div>
     <div style="text-align:right">${pts}<div>${statusPill(e.status)}</div></div></div>`;
 }
 
@@ -781,11 +801,11 @@ async function correctEntry(entryId, newPoints) {
   await runTransaction(db, async (tx) => {
     const eRef = doc(col("log"), entryId);
     const e = await tx.get(eRef);
-    if (!e.exists() || !["approved", "rejected"].includes(e.data().status)) throw new Error("Este registo já não pode ser corrigido.");
+    if (!e.exists() || !["approved", "rejected"].includes(e.data().status)) throw new Error(tr("Este registo já não pode ser corrigido."));
     const entry = e.data();
     const kRef = doc(col("kids"), entry.kidId);
     const k = await tx.get(kRef);
-    if (!k.exists()) throw new Error("Este filho já não existe.");
+    if (!k.exists()) throw new Error(tr("Este filho já não existe."));
     const cur = k.data().points || 0;
     // Um registo rejeitado não mexeu no saldo.
     const base = entry.status === "approved" ? cur - (entry.applied ?? entry.points) : cur;
@@ -804,23 +824,23 @@ function fixForm(e) {
   // Para um rejeitado, sugere os pontos da tarefa (ou os pedidos, num extra).
   const task = S.tasks.find((t) => t.id === e.taskId);
   const value = rejected ? (e.type === "extra" ? e.suggested ?? "" : task?.points ?? Math.abs(e.points)) : Math.abs(e.points);
-  openForm(`Corrigir "${e.title}"`, `<p class="small muted">${esc(kidName(e.kidId))} · ${fmtDate(e.date)} · ${rejected ? "estava rejeitado" : `agora: ${e.points} pontos`}.
-      O saldo é acertado pela diferença. Com 0 fica rejeitado.</p>
-    <label>${isPenalty ? "Pontos a retirar" : "Pontos certos"}</label>
+  openForm(tr("Corrigir \"{title}\"", { title: e.title }), `<p class="small muted">${esc(kidName(e.kidId))} · ${fmtDate(e.date)} · ${rejected ? tr("estava rejeitado") : tr("agora: {n} pontos", { n: e.points })}.
+      ${tr("O saldo é acertado pela diferença. Com 0 fica rejeitado.")}</p>
+    <label>${isPenalty ? tr("Pontos a retirar") : tr("Pontos certos")}</label>
     <input name="points" type="number" inputmode="numeric" min="0" required value="${value}">`,
   async (fd) => {
     const n = readPoints(fd.get("points"), { allowZero: true });
     await correctEntry(e.id, isPenalty ? -n : n);
-    toast("Pontos corrigidos.");
-  }, "Corrigir");
+    toast(tr("Pontos corrigidos."));
+  }, tr("Corrigir"));
 }
 
 // ---------- Vista do filho ----------
 function renderKid(kid) {
   const tabs = [
-    { id: "today", icon: "📋", label: "Tarefas" },
-    { id: "rewards", icon: "🎁", label: "Prémios" },
-    { id: "history", icon: "📜", label: "Histórico" },
+    { id: "today", icon: "📋", label: tr("Tarefas") },
+    { id: "rewards", icon: "🎁", label: tr("Prémios") },
+    { id: "history", icon: "📜", label: tr("Histórico") },
   ];
   const nav = renderTabs(tabs);
   let body = "";
@@ -828,18 +848,18 @@ function renderKid(kid) {
   if (S.tab === "rewards") body = kidRewards(kid);
   if (S.tab === "history") {
     const items = S.log.filter((e) => e.kidId === kid.id);
-    body = `${S.kids.length > 1 ? `<h2>Eu e ${S.kids.length > 2 ? "os meus irmãos" : "o meu irmão"}</h2>${siblingsSummary(kid)}` : ""}<h2>A minha semana</h2>${weekChart(kid)}<h2>Histórico</h2>`
-      + (items.length ? items.map((e) => historyItem(e, false)).join("") : `<div class="empty">Ainda não há nada no histórico.</div>`);
+    body = `${S.kids.length > 1 ? `<h2>${S.kids.length > 2 ? tr("Eu e os meus irmãos") : tr("Eu e o meu irmão")}</h2>${siblingsSummary(kid)}` : ""}<h2>${tr("A minha semana")}</h2>${weekChart(kid)}<h2>${tr("Histórico")}</h2>`
+      + (items.length ? items.map((e) => historyItem(e, false)).join("") : `<div class="empty">${tr("Ainda não há nada no histórico.")}</div>`);
   }
   const pending = S.log.filter((e) => e.kidId === kid.id && e.type === "task" && e.status === "pending")
     .reduce((s, e) => s + e.points, 0);
-  renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="Mudar a minha foto">${avatar(kid, "md")}<span class="cam">📷</span></button> ${esc(kid.name)}</h1><div>${bellButton(kid.id)}<button class="link" id="switch">Trocar</button></div></div>
-    <div class="balance"><img src="illustrations/mascote.svg" alt="" class="bal-mascot"><div class="big">⭐ ${kid.points || 0}</div><div>pontos${pending ? ` · +${pending} por validar` : ""}</div></div>
+  renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="${tr("Mudar a minha foto")}">${avatar(kid, "md")}<span class="cam">📷</span></button> ${esc(kid.name)}</h1><div>${bellButton(kid.id)}<button class="link" id="switch">${tr("Trocar")}</button></div></div>
+    <div class="balance"><img src="illustrations/mascote.svg" alt="" class="bal-mascot"><div class="big">⭐ ${kid.points || 0}</div><div>${tr("pontos")}${pending ? ` · ${tr("+{n} por validar", { n: pending })}` : ""}</div></div>
     ${body}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   bindTabs();
   document.getElementById("bell").onclick = () => guard(() => togglePush(kid.id));
-  document.getElementById("myPhoto").onclick = () => photoForm(`A foto de ${kid.name}`, kid.photo, (photo) => updateDoc(doc(col("kids"), kid.id), { photo }));
+  document.getElementById("myPhoto").onclick = () => photoForm(tr("A foto de {name}", { name: kid.name }), kid.photo, (photo) => updateDoc(doc(col("kids"), kid.id), { photo }));
   bindKidActions(kid);
   bindCharts();
 }
@@ -859,17 +879,17 @@ function specialsBox(kid) {
     return !isOver(t) || !e || e.status === "pending" || now < deadlineMs(t) + 3 * 86400000;
   }).sort((a, b) => deadlineMs(a) - deadlineMs(b));
   if (!list.length) return "";
-  return `<h2>🚀 Missões</h2>` + list.map((t) => {
+  return `<h2>🚀 ${tr("Missões")}</h2>` + list.map((t) => {
     const e = specialEntry(kid.id, t.id), over = isOver(t);
     let status;
-    if (e?.status === "approved") status = `<div class="sp-result win">🎉 Ganhaste ${ptsHtml(e.applied ?? e.points)} pontos!</div>`;
-    else if (e?.status === "rejected") status = `<div class="sp-result">😕 Desta vez não ganhaste.</div>`;
-    else if (e?.status === "pending") status = `<div class="row spread"><span class="pill pending">⏳ À espera do pai/mãe</span>${over ? "" : `<button class="link" data-special-undo="${e.id}">Cancelar</button>`}</div>`;
-    else if (over) status = `<div class="sp-result">⌛ Terminou — o pai/mãe vai decidir.</div>`;
-    else status = `<button class="primary block" data-special-done="${t.id}">✋ Já fiz!</button>`;
+    if (e?.status === "approved") status = `<div class="sp-result win">🎉 ${tr("Ganhaste {pts} pontos!", { pts: ptsHtml(e.applied ?? e.points) })}</div>`;
+    else if (e?.status === "rejected") status = `<div class="sp-result">😕 ${tr("Desta vez não ganhaste.")}</div>`;
+    else if (e?.status === "pending") status = `<div class="row spread"><span class="pill pending">⏳ ${tr("À espera do pai/mãe")}</span>${over ? "" : `<button class="link" data-special-undo="${e.id}">${tr("Cancelar")}</button>`}</div>`;
+    else if (over) status = `<div class="sp-result">⌛ ${tr("Terminou — o pai/mãe vai decidir.")}</div>`;
+    else status = `<button class="primary block" data-special-done="${t.id}">✋ ${tr("Já fiz!")}</button>`;
     return `<div class="special ${over ? "over" : ""}">
       <div class="row spread"><b class="sp-title">${esc(t.title)}</b><span class="sp-pts">+${t.points}</span></div>
-      <div class="small" style="font-weight:600">Até ${weekday(t.deadline)} ${fmtDate(t.deadline)}</div>
+      <div class="small" style="font-weight:600">${tr("Até {date}", { date: `${weekday(t.deadline)} ${fmtDate(t.deadline)}` })}</div>
       ${over || ["approved", "rejected"].includes(e?.status) ? "" : `<div class="sp-count" data-deadline="${deadlineMs(t)}">${countdownText(deadlineMs(t) - now)}</div>`}
       ${status}
     </div>`;
@@ -888,30 +908,32 @@ function kidToday(kid) {
   }).join("")}</div>` : "";
   const tasks = tasksFor(kid.id);
   const isToday = date === today();
-  if (!tasks.length) return special + strip + `<div class="empty">Ainda não há tarefas. 🎉</div>`;
+  if (!tasks.length) return special + strip + `<div class="empty">${tr("Ainda não há tarefas.")} 🎉</div>`;
   const rec = tasks.filter(isRecurring), extra = tasks.filter((t) => !isRecurring(t));
   const done = rec.filter((t) => taskEntry(kid.id, t.id, date)).length;
-  const when = isToday ? "hoje" : date === addDays(today(), -1) ? "ontem" : `em ${dayLabel(date)}`;
-  return special + strip + `<p class="muted">Toca nas tarefas que fizeste ${when}. O pai/mãe depois valida.</p>`
-    + (rec.length ? `<h2>📅 Todos os dias <span class="muted small">· ${done}/${rec.length} feitas</span></h2>${rec.map((t) => taskButton(kid, t, date)).join("")}` : "")
-    + (extra.length ? `<h2>✨ Espontâneas</h2><p class="small muted">Fizeste alguma destas? Ganha pontos extra!</p>${extra.map((t) => taskButton(kid, t, date)).join("")}` : "")
+  const hint = isToday ? tr("Toca nas tarefas que fizeste hoje. O pai/mãe depois valida.")
+    : date === addDays(today(), -1) ? tr("Toca nas tarefas que fizeste ontem. O pai/mãe depois valida.")
+    : tr("Toca nas tarefas que fizeste em {day}. O pai/mãe depois valida.", { day: dayLabel(date) });
+  return special + strip + `<p class="muted">${hint}</p>`
+    + (rec.length ? `<h2>📅 ${tr("Todos os dias")} <span class="muted small">· ${tr("{done}/{total} feitas", { done, total: rec.length })}</span></h2>${rec.map((x) => taskButton(kid, x, date)).join("")}` : "")
+    + (extra.length ? `<h2>✨ ${tr("Espontâneas")}</h2><p class="small muted">${tr("Fizeste alguma destas? Ganha pontos extra!")}</p>${extra.map((x) => taskButton(kid, x, date)).join("")}` : "")
     + extraBox(kid, date);
 }
 
 /** Pedido de pontos por algo que não está na lista; o pai/mãe decide se aceita e quantos pontos vale. */
 function extraBox(kid, date) {
   const mine = S.log.filter((e) => e.type === "extra" && e.kidId === kid.id && e.date === date);
-  return `<h2>💡 Fizeste outra coisa?</h2>
-    <p class="small muted">Conta o que fizeste que não está na lista. O pai/mãe decide se vale pontos e quantos.</p>
+  return `<h2>💡 ${tr("Fizeste outra coisa?")}</h2>
+    <p class="small muted">${tr("Conta o que fizeste que não está na lista. O pai/mãe decide se vale pontos e quantos.")}</p>
     ${mine.map((e) => `<div class="card row"><div class="grow"><b>${esc(e.title)}</b>
-      ${e.status === "pending" ? `<div class="small muted">${e.suggested ? `Pediste ${e.suggested} pontos` : "À espera do pai/mãe"}</div>` : ""}</div>
+      ${e.status === "pending" ? `<div class="small muted">${e.suggested ? tr("Pediste {n} pontos", { n: e.suggested }) : tr("À espera do pai/mãe")}</div>` : ""}</div>
       ${e.status === "approved" ? ptsHtml(e.points) : ""}${statusPill(e.status)}
-      ${e.status === "pending" ? `<button class="link" data-undo-extra="${e.id}">Cancelar</button>` : ""}</div>`).join("")}
+      ${e.status === "pending" ? `<button class="link" data-undo-extra="${e.id}">${tr("Cancelar")}</button>` : ""}</div>`).join("")}
     <form class="card" id="extraForm">
-      <input name="title" required maxlength="100" placeholder="Ex: Ajudei a vizinha com as compras">
+      <input name="title" required maxlength="100" placeholder="${tr("Ex: Ajudei a vizinha com as compras")}">
       <div class="row" style="margin-top:8px">
-        <input name="suggested" type="number" inputmode="numeric" min="1" placeholder="Pontos que achas que vale (opcional)" class="grow">
-        <button class="primary" type="submit">Pedir</button>
+        <input name="suggested" type="number" inputmode="numeric" min="1" placeholder="${tr("Pontos que achas que vale (opcional)")}" class="grow">
+        <button class="primary" type="submit">${tr("Pedir")}</button>
       </div>
     </form>`;
 }
@@ -922,7 +944,7 @@ function taskButton(kid, t, date) {
   const mark = { pending: "⏳", approved: "✓", rejected: "✕" }[st] || "";
   return `<button class="task ${st}" data-task="${t.id}">
     <span class="check">${mark}</span>
-    <span class="grow"><b>${esc(t.title)}</b>${st ? `<br><span class="small muted">${STATUS_LABEL[st]}${st === "pending" ? " · toca para desmarcar" : ""}</span>` : ""}</span>
+    <span class="grow"><b>${esc(t.title)}</b>${st ? `<br><span class="small muted">${STATUS_LABEL[st]}${st === "pending" ? ` · ${tr("toca para desmarcar")}` : ""}</span>` : ""}</span>
     ${ptsHtml(t.points)}</button>`;
 }
 
@@ -931,20 +953,20 @@ function kidRewards(kid) {
   const mine = S.rewards.filter((r) => r.suggestedBy === kid.id && r.status !== "active");
   const requests = S.log.filter((e) => e.kidId === kid.id && e.type === "reward" && e.status === "pending");
   const avail = available(kid);
-  return `${requests.length ? `<h2>Pedidos à espera</h2>${requests.map((e) => historyItem(e, false)).join("")}` : ""}
-    <h2>Prémios</h2>
+  return `${requests.length ? `<h2>${tr("Pedidos à espera")}</h2>${requests.map((e) => historyItem(e, false)).join("")}` : ""}
+    <h2>${tr("Prémios")}</h2>
     ${active.length ? active.map((r) => {
       const can = avail >= r.cost;
       return `<div class="card row"><div class="grow"><b>${esc(r.title)}</b>
-        <div class="small muted">${can ? "Já tens pontos suficientes!" : `Faltam ${r.cost - avail} pontos`}</div></div>
+        <div class="small muted">${can ? tr("Já tens pontos suficientes!") : tr("Faltam {n} pontos", { n: r.cost - avail })}</div></div>
         <span class="pts">⭐ ${r.cost}</span>
-        <button class="primary" data-claim="${r.id}" ${can ? "" : "disabled"}>Pedir</button></div>`;
-    }).join("") : `<div class="empty">Ainda não há prémios. Sugere um!</div>`}
-    <h2>Sugerir um prémio</h2>
-    <form class="card row" id="suggestForm"><input name="title" placeholder="O que gostavas de ganhar?" required maxlength="80" class="grow">
-      <button class="primary" type="submit">Sugerir</button></form>
-    ${mine.length ? `<h2>As minhas sugestões</h2>${mine.map((r) => `<div class="card row"><div class="grow">${esc(r.title)}</div>
-      <span class="pill ${r.status === "rejected" ? "rejected" : "pending"}">${r.status === "rejected" ? "Recusada" : "À espera do preço"}</span></div>`).join("")}` : ""}`;
+        <button class="primary" data-claim="${r.id}" ${can ? "" : "disabled"}>${tr("Pedir")}</button></div>`;
+    }).join("") : `<div class="empty">${tr("Ainda não há prémios. Sugere um!")}</div>`}
+    <h2>${tr("Sugerir um prémio")}</h2>
+    <form class="card row" id="suggestForm"><input name="title" placeholder="${tr("O que gostavas de ganhar?")}" required maxlength="80" class="grow">
+      <button class="primary" type="submit">${tr("Sugerir")}</button></form>
+    ${mine.length ? `<h2>${tr("As minhas sugestões")}</h2>${mine.map((r) => `<div class="card row"><div class="grow">${esc(r.title)}</div>
+      <span class="pill ${r.status === "rejected" ? "rejected" : "pending"}">${r.status === "rejected" ? tr("Recusada") : tr("À espera do preço")}</span></div>`).join("")}` : ""}`;
 }
 
 function bindKidActions(kid) {
@@ -952,39 +974,39 @@ function bindKidActions(kid) {
   app.querySelectorAll("[data-task]").forEach((b) => (b.onclick = () => guard(async () => {
     const t = S.tasks.find((x) => x.id === b.dataset.task);
     const date = S.kidDate || today();
-    if (!markableDays().includes(date)) throw new Error("Já não dá para marcar tarefas deste dia.");
+    if (!markableDays().includes(date)) throw new Error(tr("Já não dá para marcar tarefas deste dia."));
     const e = taskEntry(kid.id, t.id, date);
     if (!e) {
       await addDoc(col("log"), {
         kidId: kid.id, type: "task", taskId: t.id, title: t.title, points: t.points,
         date, status: "pending", createdAt: serverTimestamp(),
       });
-      mascotDance("Boa! Agora o pai/mãe tem de validar.");
+      mascotDance(tr("Boa! Agora o pai/mãe tem de validar."));
     } else if (e.status === "pending") {
       await deleteDoc(doc(col("log"), e.id));
     } else {
-      toast(e.status === "approved" ? "Esta já está aprovada. 👍" : "Esta foi rejeitada.");
+      toast(e.status === "approved" ? tr("Esta já está aprovada. 👍") : tr("Esta foi rejeitada."));
     }
   })));
   app.querySelectorAll("[data-claim]").forEach((b) => (b.onclick = () => guard(async () => {
     const r = S.rewards.find((x) => x.id === b.dataset.claim);
-    if (available(kid) < r.cost) throw new Error("Ainda não tens pontos suficientes.");
-    if (!confirm(`Pedir "${r.title}" por ${r.cost} pontos?`)) return;
+    if (available(kid) < r.cost) throw new Error(tr("Ainda não tens pontos suficientes."));
+    if (!confirm(tr("Pedir \"{title}\" por {n} pontos?", { title: r.title, n: r.cost }))) return;
     await addDoc(col("log"), {
       kidId: kid.id, type: "reward", rewardId: r.id, title: r.title, points: -r.cost,
       date: today(), status: "pending", createdAt: serverTimestamp(),
     });
-    toast("Pedido enviado ao pai/mãe!");
+    toast(tr("Pedido enviado ao pai/mãe!"));
   })));
   app.querySelectorAll("[data-special-done]").forEach((b) => (b.onclick = () => guard(async () => {
     const t = S.tasks.find((x) => x.id === b.dataset.specialDone);
-    if (!t || isOver(t)) throw new Error("O prazo desta missão já terminou.");
+    if (!t || isOver(t)) throw new Error(tr("O prazo desta missão já terminou."));
     if (specialEntry(kid.id, t.id)) return;
     await addDoc(col("log"), {
       kidId: kid.id, type: "special", taskId: t.id, title: t.title, points: t.points,
       date: today(), status: "pending", createdAt: serverTimestamp(),
     });
-    mascotDance("Missão cumprida! O pai/mãe vai ver. 🤞");
+    mascotDance(tr("Missão cumprida! O pai/mãe vai ver. 🤞"));
   })));
   app.querySelectorAll("[data-special-undo]").forEach((b) => (b.onclick = () => guard(() => deleteDoc(doc(col("log"), b.dataset.specialUndo)))));
   const xf = document.getElementById("extraForm");
@@ -999,7 +1021,7 @@ function bindKidActions(kid) {
         kidId: kid.id, type: "extra", title, points: 0, suggested: sug,
         date: S.kidDate || today(), status: "pending", createdAt: serverTimestamp(),
       });
-      toast("Pedido enviado! O pai/mãe vai decidir. 🤞");
+      toast(tr("Pedido enviado! O pai/mãe vai decidir. 🤞"));
     });
   };
   app.querySelectorAll("[data-undo-extra]").forEach((b) => (b.onclick = () => guard(() => deleteDoc(doc(col("log"), b.dataset.undoExtra)))));
@@ -1010,7 +1032,7 @@ function bindKidActions(kid) {
     if (!title) return;
     guard(async () => {
       await addDoc(col("rewards"), { title, status: "suggested", suggestedBy: kid.id, cost: null, createdAt: serverTimestamp() });
-      toast("Sugestão enviada!");
+      toast(tr("Sugestão enviada!"));
     });
   };
 }
@@ -1020,22 +1042,22 @@ function renderParent() {
   const pending = S.log.filter((e) => e.status === "pending");
   const suggestions = S.rewards.filter((r) => r.status === "suggested");
   const tabs = [
-    { id: "validate", icon: "✔️", label: "Validar", badge: pending.length + suggestions.length + undecidedSpecials().length },
-    { id: "kids", icon: "👧", label: "Filhos" },
-    { id: "tasks", icon: "📋", label: "Tarefas" },
-    { id: "rewards", icon: "🎁", label: "Prémios" },
-    { id: "history", icon: "📜", label: "Histórico" },
+    { id: "validate", icon: "✔️", label: tr("Validar"), badge: pending.length + suggestions.length + undecidedSpecials().length },
+    { id: "kids", icon: "👧", label: tr("Filhos") },
+    { id: "tasks", icon: "📋", label: tr("Tarefas") },
+    { id: "rewards", icon: "🎁", label: tr("Prémios") },
+    { id: "history", icon: "📜", label: tr("Histórico") },
   ];
   const nav = renderTabs(tabs);
   const views = { validate: parentValidate, kids: parentKids, tasks: parentTasks, rewards: parentRewards, history: parentHistory };
-  renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="Mudar a foto do pai/mãe">${parentAvatar("md")}<span class="cam">📷</span></button> Pai / Mãe</h1>
-    <div>${bellButton("parent")}<button class="link" id="settings">⚙️</button><button class="link" id="switch">Trocar</button></div></div>
+  renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="${tr("Mudar a foto do pai/mãe")}">${parentAvatar("md")}<span class="cam">📷</span></button> ${tr("Pai / Mãe")}</h1>
+    <div>${bellButton("parent")}<button class="link" id="settings">⚙️</button><button class="link" id="switch">${tr("Trocar")}</button></div></div>
     ${views[S.tab]()}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   document.getElementById("settings").onclick = openSettings;
   bindTabs();
   document.getElementById("bell").onclick = () => guard(() => togglePush("parent"));
-  document.getElementById("myPhoto").onclick = () => photoForm("Foto do pai/mãe", S.fam.parentPhoto, (photo) => updateDoc(famDoc(), { parentPhoto: photo }));
+  document.getElementById("myPhoto").onclick = () => photoForm(tr("Foto do pai/mãe"), S.fam.parentPhoto, (photo) => updateDoc(famDoc(), { parentPhoto: photo }));
   bindParentActions();
   bindCharts();
 }
@@ -1044,97 +1066,97 @@ function parentValidate() {
   const pending = S.log.filter((e) => e.status === "pending");
   const suggestions = S.rewards.filter((r) => r.status === "suggested");
   const ended = undecidedSpecials();
-  if (!pending.length && !suggestions.length && !ended.length) return `<div class="empty">Nada por validar. ✨</div>`;
+  if (!pending.length && !suggestions.length && !ended.length) return `<div class="empty">${tr("Nada por validar.")} ✨</div>`;
   let html = "";
   if (ended.length) {
-    html += `<h2>🚀 Missões terminadas</h2><p class="small muted">O prazo acabou. Ganharam os pontos?</p>`
+    html += `<h2>🚀 ${tr("Missões terminadas")}</h2><p class="small muted">${tr("O prazo acabou. Ganharam os pontos?")}</p>`
       + ended.map(({ t, k }) => `<div class="card row wrap">
         ${avatar(k, "sm")}
-        <div class="grow"><b>${esc(t.title)}</b><div class="small muted">${esc(k.name)} · terminou ${fmtDate(t.deadline)}</div></div>
-        <button class="good" data-special-win="${t.id}|${k.id}">Ganhou +${t.points}</button>
-        <button class="bad" data-special-lose="${t.id}|${k.id}">Não</button></div>`).join("");
+        <div class="grow"><b>${esc(t.title)}</b><div class="small muted">${esc(k.name)} · ${tr("terminou {date}", { date: fmtDate(t.deadline) })}</div></div>
+        <button class="good" data-special-win="${t.id}|${k.id}">${tr("Ganhou +{n}", { n: t.points })}</button>
+        <button class="bad" data-special-lose="${t.id}|${k.id}">${tr("Não")}</button></div>`).join("");
   }
   for (const kid of S.kids) {
     const items = pending.filter((e) => e.kidId === kid.id).sort((a, b) => a.date.localeCompare(b.date));
     if (!items.length) continue;
     const taskCount = items.filter((e) => e.type === "task").length;
-    html += `<div class="row spread"><h2 class="row">${avatar(kid, "sm")} ${esc(kid.name)} <span class="muted small">· saldo ${kid.points || 0}</span></h2>
-      ${taskCount > 1 ? `<button class="good" data-approve-all="${kid.id}">Aprovar tarefas (${taskCount})</button>` : ""}</div>`;
+    html += `<div class="row spread"><h2 class="row">${avatar(kid, "sm")} ${esc(kid.name)} <span class="muted small">· ${tr("saldo {n}", { n: kid.points || 0 })}</span></h2>
+      ${taskCount > 1 ? `<button class="good" data-approve-all="${kid.id}">${tr("Aprovar tarefas ({n})", { n: taskCount })}</button>` : ""}</div>`;
     html += items.map((e) => e.type === "special" ? `<div class="card row wrap special-row">
       <div style="font-size:1.3rem">🚀</div>
-      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">Missão · diz que já fez · ${dayLabel(e.date)}</div></div>
+      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">${tr("Missão · diz que já fez")} · ${dayLabel(e.date)}</div></div>
       ${ptsHtml(e.points)}
-      <button class="good" data-approve="${e.id}" aria-label="Ganhou">✓</button>
-      <button class="bad" data-reject="${e.id}" aria-label="Não ganhou">✕</button></div>` : e.type === "extra" ? `<div class="card row wrap">
+      <button class="good" data-approve="${e.id}" aria-label="${tr("Ganhou")}">✓</button>
+      <button class="bad" data-reject="${e.id}" aria-label="${tr("Não ganhou")}">✕</button></div>` : e.type === "extra" ? `<div class="card row wrap">
       <div style="font-size:1.3rem">💡</div>
-      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">Extra fora da lista · ${dayLabel(e.date)}${e.suggested ? ` · pede ${e.suggested} pts` : ""}</div></div>
-      <button class="good" data-give-extra="${e.id}">Dar pontos</button>
-      <button class="bad" data-reject="${e.id}" aria-label="Rejeitar">✕</button></div>` : `<div class="card row wrap">
+      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">${tr("Extra fora da lista")} · ${dayLabel(e.date)}${e.suggested ? ` · ${tr("pede {n} pts", { n: e.suggested })}` : ""}</div></div>
+      <button class="good" data-give-extra="${e.id}">${tr("Dar pontos")}</button>
+      <button class="bad" data-reject="${e.id}" aria-label="${tr("Rejeitar")}">✕</button></div>` : `<div class="card row wrap">
       <div style="font-size:1.3rem">${e.type === "reward" ? "🎁" : "✅"}</div>
-      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">${e.type === "reward" ? "Pedido de prémio" : "Tarefa"} · ${dayLabel(e.date)}</div></div>
+      <div class="grow"><b>${esc(e.title)}</b><div class="small muted">${e.type === "reward" ? tr("Pedido de prémio") : tr("Tarefa")} · ${dayLabel(e.date)}</div></div>
       ${ptsHtml(e.points)}
-      <button class="good" data-approve="${e.id}" aria-label="Aprovar">✓</button>
-      <button class="bad" data-reject="${e.id}" aria-label="Rejeitar">✕</button></div>`).join("");
+      <button class="good" data-approve="${e.id}" aria-label="${tr("Aprovar")}">✓</button>
+      <button class="bad" data-reject="${e.id}" aria-label="${tr("Rejeitar")}">✕</button></div>`).join("");
   }
   if (suggestions.length) {
-    html += `<h2>Prémios sugeridos</h2>` + suggestions.map((r) => `<div class="card row wrap">
-      <div class="grow"><b>${esc(r.title)}</b><div class="small muted">Sugerido por ${esc(kidName(r.suggestedBy))}</div></div>
-      <button class="good" data-price="${r.id}">Dar preço</button>
-      <button class="bad" data-decline="${r.id}">Recusar</button></div>`).join("");
+    html += `<h2>${tr("Prémios sugeridos")}</h2>` + suggestions.map((r) => `<div class="card row wrap">
+      <div class="grow"><b>${esc(r.title)}</b><div class="small muted">${tr("Sugerido por {name}", { name: esc(kidName(r.suggestedBy)) })}</div></div>
+      <button class="good" data-price="${r.id}">${tr("Dar preço")}</button>
+      <button class="bad" data-decline="${r.id}">${tr("Recusar")}</button></div>`).join("");
   }
   return html;
 }
 
 function parentKids() {
-  return (S.kids.length > 1 ? `<h2 style="margin-top:0">Comparação</h2>${siblingsSummary()}` : "")
+  return (S.kids.length > 1 ? `<h2 style="margin-top:0">${tr("Comparação")}</h2>${siblingsSummary()}` : "")
     + (S.kids.length ? S.kids.map((k) => `<div class="card">
-      <div class="row"><button class="avatar-btn" data-kid-photo="${k.id}" aria-label="Mudar a foto de ${esc(k.name)}">${avatar(k, "md")}<span class="cam">📷</span></button>
-        <div class="grow"><h3>${esc(k.name)}</h3><div class="muted small">${pendingRewardCost(k.id) ? `${pendingRewardCost(k.id)} pts em pedidos de prémio` : ""}</div></div>
+      <div class="row"><button class="avatar-btn" data-kid-photo="${k.id}" aria-label="${tr("Mudar a foto de {name}", { name: esc(k.name) })}">${avatar(k, "md")}<span class="cam">📷</span></button>
+        <div class="grow"><h3>${esc(k.name)}</h3><div class="muted small">${pendingRewardCost(k.id) ? tr("{n} pts em pedidos de prémio", { n: pendingRewardCost(k.id) }) : ""}</div></div>
         <div class="pts" style="font-size:1.4rem">⭐ ${k.points || 0}</div></div>
       ${weekChart(k)}
       <div class="row wrap" style="margin-top:10px">
-        <button class="bad" data-penalty="${k.id}">− Mau comportamento</button>
-        <button class="good" data-bonus="${k.id}">+ Bónus</button>
-        <button data-edit-kid="${k.id}">Editar</button></div></div>`).join("")
-    : `<div class="empty">Ainda não adicionaste filhos.</div>`)
-    + `<button class="primary block" id="addKid">+ Adicionar filho</button>`;
+        <button class="bad" data-penalty="${k.id}">− ${tr("Mau comportamento")}</button>
+        <button class="good" data-bonus="${k.id}">+ ${tr("Bónus")}</button>
+        <button data-edit-kid="${k.id}">${tr("Editar")}</button></div></div>`).join("")
+    : `<div class="empty">${tr("Ainda não adicionaste filhos.")}</div>`)
+    + `<button class="primary block" id="addKid">+ ${tr("Adicionar filho")}</button>`;
 }
 
 function parentTasks() {
   const active = S.tasks.filter((t) => t.active !== false);
   const row = (t) => `<div class="card row">
-      <div class="grow"><b>${esc(t.title)}</b><div class="small muted">${esc(t.kidIds?.length ? t.kidIds.map(kidName).join(", ") : "Todos os filhos")}</div></div>
-      ${ptsHtml(t.points)}<button data-edit-task="${t.id}">Editar</button></div>`;
+      <div class="grow"><b>${esc(t.title)}</b><div class="small muted">${esc(t.kidIds?.length ? t.kidIds.map(kidName).join(", ") : tr("Todos os filhos"))}</div></div>
+      ${ptsHtml(t.points)}<button data-edit-task="${t.id}">${tr("Editar")}</button></div>`;
   const specials = active.filter(isSpecial).sort((a, b) => deadlineMs(a) - deadlineMs(b));
   const rec = active.filter((t) => isRecurring(t) && !isSpecial(t)), extra = active.filter((t) => !isRecurring(t) && !isSpecial(t));
   const spRow = (t) => {
     const kids = kidsOf(t), decided = kids.filter((k) => ["approved", "rejected"].includes(specialEntry(k.id, t.id)?.status)).length;
     return `<div class="card row special-row">
-      <div class="grow"><b>${esc(t.title)}</b><div class="small muted">Até ${fmtDate(t.deadline)} · ${esc(t.kidIds?.length ? t.kidIds.map(kidName).join(", ") : "Todos os filhos")}</div>
-        <div class="small">${isOver(t) ? `Terminou · ${decided}/${kids.length} decididos` : `Faltam <span data-deadline="${deadlineMs(t)}">${countdownText(deadlineMs(t) - Date.now())}</span>`}</div></div>
-      ${ptsHtml(t.points)}<button data-edit-task="${t.id}">Editar</button></div>`;
+      <div class="grow"><b>${esc(t.title)}</b><div class="small muted">${tr("Até {date}", { date: fmtDate(t.deadline) })} · ${esc(t.kidIds?.length ? t.kidIds.map(kidName).join(", ") : tr("Todos os filhos"))}</div>
+        <div class="small">${isOver(t) ? tr("Terminou · {done}/{total} decididos", { done: decided, total: kids.length }) : tr("Faltam {time}", { time: `<span data-deadline="${deadlineMs(t)}">${countdownText(deadlineMs(t) - Date.now())}</span>` })}</div></div>
+      ${ptsHtml(t.points)}<button data-edit-task="${t.id}">${tr("Editar")}</button></div>`;
   };
-  return `<button class="block" id="taskIdeas" style="margin-bottom:4px">💡 Ideias de tarefas</button>
-    <div class="row spread"><h2>🚀 Missões <span class="muted small">· com prazo</span></h2><button class="primary" data-add-task="special">+ Nova</button></div>
-    ${specials.length ? specials.map(spRow).join("") : `<div class="empty">Missões com data limite, como "Ler um livro até sexta". No fim decides se ganharam.</div>`}
-    <div class="row spread"><h2>📅 Recorrentes <span class="muted small">· todos os dias</span></h2><button class="primary" data-add-task="rec">+ Nova</button></div>
-    ${rec.length ? rec.map(row).join("") : `<div class="empty">Tarefas para fazer sempre, como "Fazer a cama".</div>`}
-    <div class="row spread"><h2>✨ Espontâneas <span class="muted small">· quando acontecem</span></h2><button class="primary" data-add-task="extra">+ Nova</button></div>
-    ${extra.length ? extra.map(row).join("") : `<div class="empty">Pontos extra para coisas que não são diárias, como "Ajudar a lavar o carro".</div>`}`;
+  return `<button class="block" id="taskIdeas" style="margin-bottom:4px">💡 ${tr("Ideias de tarefas")}</button>
+    <div class="row spread"><h2>🚀 ${tr("Missões")} <span class="muted small">· ${tr("com prazo")}</span></h2><button class="primary" data-add-task="special">+ ${tr("Nova")}</button></div>
+    ${specials.length ? specials.map(spRow).join("") : `<div class="empty">${tr("Missões com data limite, como \"Ler um livro até sexta\". No fim decides se ganharam.")}</div>`}
+    <div class="row spread"><h2>📅 ${tr("Recorrentes")} <span class="muted small">· ${tr("todos os dias")}</span></h2><button class="primary" data-add-task="rec">+ ${tr("Nova")}</button></div>
+    ${rec.length ? rec.map(row).join("") : `<div class="empty">${tr("Tarefas para fazer sempre, como \"Fazer a cama\".")}</div>`}
+    <div class="row spread"><h2>✨ ${tr("Espontâneas")} <span class="muted small">· ${tr("quando acontecem")}</span></h2><button class="primary" data-add-task="extra">+ ${tr("Nova")}</button></div>
+    ${extra.length ? extra.map(row).join("") : `<div class="empty">${tr("Pontos extra para coisas que não são diárias, como \"Ajudar a lavar o carro\".")}</div>`}`;
 }
 
 function parentRewards() {
   const active = S.rewards.filter((r) => r.status === "active");
-  return `<div class="row" style="margin-bottom:12px"><button class="grow" id="rewardIdeas">💡 Ideias</button><button class="primary grow" id="addReward">+ Novo prémio</button></div>`
+  return `<div class="row" style="margin-bottom:12px"><button class="grow" id="rewardIdeas">💡 ${tr("Ideias")}</button><button class="primary grow" id="addReward">+ ${tr("Novo prémio")}</button></div>`
     + (active.length ? active.map((r) => `<div class="card row">
-      <div class="grow"><b>${esc(r.title)}</b>${r.suggestedBy ? `<div class="small muted">Sugerido por ${esc(kidName(r.suggestedBy))}</div>` : ""}</div>
-      <span class="pts">⭐ ${r.cost}</span><button data-edit-reward="${r.id}">Editar</button></div>`).join("")
-      : `<div class="empty">Ainda não há prémios.</div>`);
+      <div class="grow"><b>${esc(r.title)}</b>${r.suggestedBy ? `<div class="small muted">${tr("Sugerido por {name}", { name: esc(kidName(r.suggestedBy)) })}</div>` : ""}</div>
+      <span class="pts">⭐ ${r.cost}</span><button data-edit-reward="${r.id}">${tr("Editar")}</button></div>`).join("")
+      : `<div class="empty">${tr("Ainda não há prémios.")}</div>`);
 }
 
 function parentHistory() {
   const items = S.log.filter((e) => e.status !== "pending");
-  return items.length ? items.slice(0, 200).map((e) => historyItem(e, true, true)).join("") : `<div class="empty">Ainda não há histórico.</div>`;
+  return items.length ? items.slice(0, 200).map((e) => historyItem(e, true, true)).join("") : `<div class="empty">${tr("Ainda não há histórico.")}</div>`;
 }
 
 function bindParentActions() {
@@ -1143,22 +1165,22 @@ function bindParentActions() {
   on("[data-fix]", (b) => fixForm(S.log.find((x) => x.id === b.dataset.fix)));
   on("[data-give-extra]", (b) => {
     const e = S.log.find((x) => x.id === b.dataset.giveExtra);
-    openForm(`Pontos para "${e.title}"`, `<p class="small muted">${esc(kidName(e.kidId))}${e.suggested ? ` pediu ${e.suggested} pontos` : " não sugeriu pontos"}.</p>
-      <label>Quantos pontos vale?</label><input name="points" type="number" inputmode="numeric" min="1" required value="${e.suggested ?? ""}">`,
-    async (fd) => { await approveEntry(e.id, readPoints(fd.get("points"))); toast("Pontos dados! 🌟"); }, "Dar pontos");
+    openForm(tr("Pontos para \"{title}\"", { title: e.title }), `<p class="small muted">${e.suggested ? tr("{name} pediu {n} pontos.", { name: esc(kidName(e.kidId)), n: e.suggested }) : tr("{name} não sugeriu pontos.", { name: esc(kidName(e.kidId)) })}</p>
+      <label>${tr("Quantos pontos vale?")}</label><input name="points" type="number" inputmode="numeric" min="1" required value="${e.suggested ?? ""}">`,
+    async (fd) => { await approveEntry(e.id, readPoints(fd.get("points"))); toast(tr("Pontos dados! 🌟")); }, tr("Dar pontos"));
   });
   on("[data-reject]", (b) => guard(() => rejectEntry(b.dataset.reject)));
   on("[data-approve-all]", (b) => guard(async () => {
     const ids = S.log.filter((e) => e.status === "pending" && e.type === "task" && e.kidId === b.dataset.approveAll).map((e) => e.id);
     for (const id of ids) await approveEntry(id);
-    toast(`${ids.length} tarefas aprovadas.`);
+    toast(tr("{n} tarefas aprovadas.", { n: ids.length }));
   }));
   on("[data-price]", (b) => rewardForm(S.rewards.find((r) => r.id === b.dataset.price)));
   on("[data-decline]", (b) => guard(() => updateDoc(doc(col("rewards"), b.dataset.decline), { status: "rejected" })));
   on("[data-penalty]", (b) => pointsForm(b.dataset.penalty, -1));
   on("[data-bonus]", (b) => pointsForm(b.dataset.bonus, 1));
   on("[data-edit-kid]", (b) => kidForm(kidById(b.dataset.editKid)));
-  on("[data-kid-photo]", (b) => { const k = kidById(b.dataset.kidPhoto); photoForm(`A foto de ${k.name}`, k.photo, (photo) => updateDoc(doc(col("kids"), k.id), { photo })); });
+  on("[data-kid-photo]", (b) => { const k = kidById(b.dataset.kidPhoto); photoForm(tr("A foto de {name}", { name: k.name }), k.photo, (photo) => updateDoc(doc(col("kids"), k.id), { photo })); });
   on("[data-edit-task]", (b) => taskForm(S.tasks.find((t) => t.id === b.dataset.editTask)));
   on("[data-edit-reward]", (b) => rewardForm(S.rewards.find((r) => r.id === b.dataset.editReward)));
   on("#addKid", () => kidForm(null));
@@ -1168,7 +1190,7 @@ function bindParentActions() {
     const t = S.tasks.find((x) => x.id === tid);
     if (specialEntry(kid, tid)) return;
     await decideSpecial(t, kid, won);
-    toast(won ? "Pontos dados! 🌟" : "Registado.");
+    toast(won ? tr("Pontos dados! 🌟") : tr("Registado."));
   });
   on("[data-special-win]", (b) => decide(b, true));
   on("[data-special-lose]", (b) => decide(b, false));
@@ -1183,28 +1205,28 @@ function readPoints(v, { allowZero = false } = {}) {
   const n = Number(v);
   const min = allowZero ? 0 : 1;
   if (!Number.isInteger(n) || n < min || n > MAX_POINTS) {
-    throw new Error(`Os pontos têm de ser um número inteiro entre ${min} e ${MAX_POINTS.toLocaleString("pt-PT")}.`);
+    throw new Error(tr("Os pontos têm de ser um número inteiro entre {min} e {max}.", { min, max: MAX_POINTS.toLocaleString(LOCALE) }));
   }
   return n;
 }
 
 function pointsForm(kidId, sign) {
   const kid = kidById(kidId);
-  const title = sign < 0 ? `Mau comportamento — ${kid.name}` : `Bónus — ${kid.name}`;
-  openForm(title, `<label>Motivo</label><input name="title" required maxlength="100" placeholder="${sign < 0 ? "Ex: Bateu no irmão" : "Ex: Ajudou sem ninguém pedir"}">
-    <label>Pontos</label><input name="points" type="number" inputmode="numeric" min="1" required>
-    ${sign < 0 ? `<p class="small muted">Saldo atual: ${kid.points || 0}. O saldo nunca desce abaixo de 0.</p>` : ""}`,
+  const title = sign < 0 ? tr("Mau comportamento — {name}", { name: kid.name }) : tr("Bónus — {name}", { name: kid.name });
+  openForm(title, `<label>${tr("Motivo")}</label><input name="title" required maxlength="100" placeholder="${sign < 0 ? tr("Ex: Bateu no irmão") : tr("Ex: Ajudou sem ninguém pedir")}">
+    <label>${tr("Pontos")}</label><input name="points" type="number" inputmode="numeric" min="1" required>
+    ${sign < 0 ? `<p class="small muted">${tr("Saldo atual: {n}. O saldo nunca desce abaixo de 0.", { n: kid.points || 0 })}</p>` : ""}`,
   async (fd) => {
     const pts = readPoints(fd.get("points"));
     await adjustPoints(kidId, sign * pts, fd.get("title").trim());
-    toast(sign < 0 ? "Penalização registada." : "Bónus atribuído!");
-  }, sign < 0 ? "Retirar pontos" : "Dar pontos");
+    toast(sign < 0 ? tr("Penalização registada.") : tr("Bónus atribuído!"));
+  }, sign < 0 ? tr("Retirar pontos") : tr("Dar pontos"));
 }
 
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.6";
+const APP_VERSION = "2026-10-28.7";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1214,7 +1236,7 @@ async function checkForUpdate() {
     // Evita ciclos se o servidor ainda estiver a servir a versão antiga.
     if (sessionStorage.getItem("pf-updated-to") === version) return;
     sessionStorage.setItem("pf-updated-to", version);
-    await Promise.all(["./", "index.html", "app.js", "style.css", "firebase-config.js", "sw.js", "manifest.webmanifest"]
+    await Promise.all(["./", "index.html", "app.js", "style.css", "firebase-config.js", "sw.js", "manifest.webmanifest", "i18n.js", "landing.js", `i18n/${LANG}.json`]
       .map((u) => fetch(u, { cache: "reload" }).catch(() => {})));
     location.reload();
   } catch { /* sem rede: tenta da próxima vez */ }
@@ -1229,9 +1251,9 @@ const photoFieldHtml = () => `
     <div class="row wrap">
       <canvas id="photoCanvas" width="${PHOTO_SIZE}" height="${PHOTO_SIZE}" class="photo-edit hidden"></canvas>
       <div class="grow">
-        <label class="btn" style="display:inline-block;margin:0;font-weight:400">📷 Escolher foto<input type="file" accept="image/*" id="photoFile" hidden></label>
-        <button type="button" class="link hidden" id="photoRemove">Remover foto</button>
-        <div id="photoZoomBox" class="hidden"><p class="small muted" style="margin:8px 0 2px">Arrasta para centrar a cara; usa a barra para aproximar.</p>
+        <label class="btn" style="display:inline-block;margin:0;font-weight:400">📷 ${tr("Escolher foto")}<input type="file" accept="image/*" id="photoFile" hidden></label>
+        <button type="button" class="link hidden" id="photoRemove">${tr("Remover foto")}</button>
+        <div id="photoZoomBox" class="hidden"><p class="small muted" style="margin:8px 0 2px">${tr("Arrasta para centrar a cara; usa a barra para aproximar.")}</p>
           <input type="range" id="photoZoom" min="1" max="4" step="0.01" value="1"></div>
       </div>
     </div>`;
@@ -1316,11 +1338,11 @@ function photoEditor(form, initial) {
 
 /** Janela só para mudar uma foto (abre ao tocar na foto). */
 function photoForm(title, current, save) {
-  const form = openForm(title, `${photoFieldHtml()}<p class="small muted" style="margin-top:10px">Toca em "Escolher foto" para tirar uma foto ou escolher da galeria.</p>`,
+  const form = openForm(title, `${photoFieldHtml()}<p class="small muted" style="margin-top:10px">${tr("Toca em \"Escolher foto\" para tirar uma foto ou escolher da galeria.")}</p>`,
     async () => {
       if (!photo.changed) return;
       await save(photo.dataUrl());
-      toast("Foto atualizada! 📸");
+      toast(tr("Foto atualizada! 📸"));
     });
   const photo = photoEditor(form, current && PHOTO_RE.test(current) ? current : null);
   // Abre logo a escolha da foto (no iPhone pode ser preciso tocar no botão).
@@ -1329,20 +1351,20 @@ function photoForm(title, current, save) {
 
 function kidForm(kid) {
   const emoji = kid?.emoji || EMOJIS[S.kids.length % EMOJIS.length];
-  const form = openForm(kid ? `Editar ${kid.name}` : "Novo filho", `
-    <label>Nome</label><input name="name" required maxlength="30" value="${esc(kid?.name || "")}">
-    <label>Foto</label>${photoFieldHtml()}
-    <label>Emoji (quando não há foto)</label><select name="emoji">${EMOJIS.map((e) => `<option ${e === emoji ? "selected" : ""}>${e}</option>`).join("")}</select>
-    <label>${kid ? "Novo PIN (deixa vazio para manter)" : "PIN (4 a 6 dígitos)"}</label>
+  const form = openForm(kid ? tr("Editar {name}", { name: kid.name }) : tr("Novo filho"), `
+    <label>${tr("Nome")}</label><input name="name" required maxlength="30" value="${esc(kid?.name || "")}">
+    <label>${tr("Foto")}</label>${photoFieldHtml()}
+    <label>${tr("Emoji (quando não há foto)")}</label><select name="emoji">${EMOJIS.map((e) => `<option ${e === emoji ? "selected" : ""}>${e}</option>`).join("")}</select>
+    <label>${kid ? tr("Novo PIN (deixa vazio para manter)") : tr("PIN (4 a 6 dígitos)")}</label>
     <input name="pin" type="password" inputmode="numeric" maxlength="6" ${kid ? "" : "required"} autocomplete="off">
-    ${kid ? `<button type="button" class="bad" id="delKid" style="margin-top:16px">Remover ${esc(kid.name)}</button>` : ""}`,
+    ${kid ? `<button type="button" class="bad" id="delKid" style="margin-top:16px">${tr("Remover {name}", { name: esc(kid.name) })}</button>` : ""}`,
   async (fd) => {
     const name = fd.get("name").trim(), pin = fd.get("pin");
-    if (!name) throw new Error("Escreve o nome.");
+    if (!name) throw new Error(tr("Escreve o nome."));
     const data = { name, emoji: fd.get("emoji") };
     if (photo.changed) data.photo = photo.dataUrl();
     if (pin || !kid) {
-      if (!validPin(pin)) throw new Error("O PIN tem de ter 4 a 6 dígitos.");
+      if (!validPin(pin)) throw new Error(tr("O PIN tem de ter 4 a 6 dígitos."));
       data.pinHash = await hashPin(pin);
     }
     if (kid) await updateDoc(doc(col("kids"), kid.id), data);
@@ -1351,7 +1373,7 @@ function kidForm(kid) {
   const photo = photoEditor(form, kid?.photo && PHOTO_RE.test(kid.photo) ? kid.photo : null);
   const del = form.querySelector("#delKid");
   if (del) del.onclick = () => guard(async () => {
-    if (!confirm(`Remover ${kid.name}? Perde os ${kid.points || 0} pontos. O histórico fica guardado.`)) return;
+    if (!confirm(tr("Remover {name}? Perde os {n} pontos. O histórico fica guardado.", { name: kid.name, n: kid.points || 0 }))) return;
     await deleteDoc(doc(col("kids"), kid.id));
     closeModal();
   });
@@ -1359,28 +1381,28 @@ function kidForm(kid) {
 
 function taskForm(task, kindDefault = "rec") {
   const kind = task ? (isSpecial(task) ? "special" : isRecurring(task) ? "rec" : "extra") : kindDefault;
-  const placeholder = { rec: "Ex: Fazer a cama", extra: "Ex: Ajudar a lavar o carro", special: "Ex: Ler um livro inteiro" }[kind];
-  const form = openForm(task ? "Editar tarefa" : "Nova tarefa", `
-    <label>Tarefa</label><input name="title" required maxlength="80" value="${esc(task?.title || "")}" placeholder="${placeholder}">
-    <label>Pontos</label><input name="points" type="number" inputmode="numeric" min="1" required value="${task?.points ?? ""}">
-    <label>Tipo</label>
-    <label class="inline"><input type="radio" name="kind" value="rec" ${kind === "rec" ? "checked" : ""}> 📅 Recorrente (todos os dias)</label>
-    <label class="inline"><input type="radio" name="kind" value="extra" ${kind === "extra" ? "checked" : ""}> ✨ Espontânea (quando acontece)</label>
-    <label class="inline"><input type="radio" name="kind" value="special" ${kind === "special" ? "checked" : ""}> 🚀 Missão (com prazo)</label>
-    <div id="deadlineBox"><label>Até que dia?</label><input name="deadline" type="date" min="${today()}" value="${task?.deadline || addDays(today(), 7)}">
-      <p class="small muted">Os filhos veem um contador até ao fim desse dia. No fim, decides se ganharam os pontos.</p></div>
-    <label>Para quem</label>
-    ${S.kids.length ? S.kids.map((k) => `<label class="inline"><input type="checkbox" name="kids" value="${k.id}" ${!task?.kidIds?.length || task.kidIds.includes(k.id) ? "checked" : ""}> ${avatar(k, "xs")} ${esc(k.name)}</label>`).join("") : `<p class="small muted">Todos os filhos.</p>`}
-    ${task ? `<button type="button" class="bad" id="delTask" style="margin-top:16px">Apagar tarefa</button>` : ""}`,
+  const placeholder = { rec: tr("Ex: Fazer a cama"), extra: tr("Ex: Ajudar a lavar o carro"), special: tr("Ex: Ler um livro inteiro") }[kind];
+  const form = openForm(task ? tr("Editar tarefa") : tr("Nova tarefa"), `
+    <label>${tr("Tarefa")}</label><input name="title" required maxlength="80" value="${esc(task?.title || "")}" placeholder="${placeholder}">
+    <label>${tr("Pontos")}</label><input name="points" type="number" inputmode="numeric" min="1" required value="${task?.points ?? ""}">
+    <label>${tr("Tipo")}</label>
+    <label class="inline"><input type="radio" name="kind" value="rec" ${kind === "rec" ? "checked" : ""}> 📅 ${tr("Recorrente (todos os dias)")}</label>
+    <label class="inline"><input type="radio" name="kind" value="extra" ${kind === "extra" ? "checked" : ""}> ✨ ${tr("Espontânea (quando acontece)")}</label>
+    <label class="inline"><input type="radio" name="kind" value="special" ${kind === "special" ? "checked" : ""}> 🚀 ${tr("Missão (com prazo)")}</label>
+    <div id="deadlineBox"><label>${tr("Até que dia?")}</label><input name="deadline" type="date" min="${today()}" value="${task?.deadline || addDays(today(), 7)}">
+      <p class="small muted">${tr("Os filhos veem um contador até ao fim desse dia. No fim, decides se ganharam os pontos.")}</p></div>
+    <label>${tr("Para quem")}</label>
+    ${S.kids.length ? S.kids.map((k) => `<label class="inline"><input type="checkbox" name="kids" value="${k.id}" ${!task?.kidIds?.length || task.kidIds.includes(k.id) ? "checked" : ""}> ${avatar(k, "xs")} ${esc(k.name)}</label>`).join("") : `<p class="small muted">${tr("Todos os filhos.")}</p>`}
+    ${task ? `<button type="button" class="bad" id="delTask" style="margin-top:16px">${tr("Apagar tarefa")}</button>` : ""}`,
   async (fd) => {
     const title = fd.get("title").trim();
-    if (!title) throw new Error("Escreve o nome da tarefa.");
+    if (!title) throw new Error(tr("Escreve o nome da tarefa."));
     const k = fd.get("kind");
     const deadline = fd.get("deadline");
-    if (k === "special" && !/^\d{4}-\d{2}-\d{2}$/.test(deadline || "")) throw new Error("Escolhe até que dia.");
-    if (k === "special" && deadline < today() && deadline !== task?.deadline) throw new Error("A data limite não pode ser no passado.");
+    if (k === "special" && !/^\d{4}-\d{2}-\d{2}$/.test(deadline || "")) throw new Error(tr("Escolhe até que dia."));
+    if (k === "special" && deadline < today() && deadline !== task?.deadline) throw new Error(tr("A data limite não pode ser no passado."));
     const selKids = fd.getAll("kids");
-    if (S.kids.length && !selKids.length) throw new Error("Escolhe pelo menos um filho.");
+    if (S.kids.length && !selKids.length) throw new Error(tr("Escolhe pelo menos um filho."));
     const data = {
       title, points: readPoints(fd.get("points")), recurring: k === "rec",
       special: k === "special", deadline: k === "special" ? deadline : null,
@@ -1398,7 +1420,7 @@ function taskForm(task, kindDefault = "rec") {
   const del = form.querySelector("#delTask");
   // Arquivar em vez de apagar mantém o histórico coerente.
   if (del) del.onclick = () => guard(async () => {
-    if (!confirm("Apagar esta tarefa?")) return;
+    if (!confirm(tr("Apagar esta tarefa?"))) return;
     await updateDoc(doc(col("tasks"), task.id), { active: false });
     closeModal();
   });
@@ -1410,18 +1432,18 @@ function ideasForm(kind) {
   const existing = new Set((isTasks ? S.tasks.filter((t) => t.active !== false) : S.rewards.filter((r) => r.status === "active"))
     .map((x) => x.title.trim().toLowerCase()));
   const ideas = (isTasks ? TASK_IDEAS : REWARD_IDEAS).filter(([title]) => !existing.has(title.toLowerCase()))
-    .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0], "pt"));
-  if (!ideas.length) { toast("Já adicionaste todas as ideias."); return; }
-  const form = openForm(isTasks ? "Ideias de tarefas recorrentes" : "Ideias de prémios", `
-    <p class="small muted">Escolhe as que queres e ajusta os pontos. ${isTasks ? "Ficam como recorrentes, para todos os filhos." : ""}</p>
-    <label class="inline" style="font-weight:600"><input type="checkbox" id="pickAll"> Selecionar todas</label>
+    .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0], LOCALE));
+  if (!ideas.length) { toast(tr("Já adicionaste todas as ideias.")); return; }
+  const form = openForm(isTasks ? tr("Ideias de tarefas recorrentes") : tr("Ideias de prémios"), `
+    <p class="small muted">${tr("Escolhe as que queres e ajusta os pontos.")} ${isTasks ? tr("Ficam como recorrentes, para todos os filhos.") : ""}</p>
+    <label class="inline" style="font-weight:600"><input type="checkbox" id="pickAll"> ${tr("Selecionar todas")}</label>
     ${ideas.map(([title, pts], i) => `<div class="row" style="margin:6px 0">
       <label class="inline grow" style="margin:0"><input type="checkbox" name="pick" value="${i}"> ${esc(title)}</label>
       <input name="pts${i}" type="number" inputmode="numeric" min="1" value="${pts}" style="width:80px">
     </div>`).join("")}`,
   async (fd) => {
     const picked = fd.getAll("pick").map(Number);
-    if (!picked.length) throw new Error("Escolhe pelo menos uma.");
+    if (!picked.length) throw new Error(tr("Escolhe pelo menos uma."));
     const batch = writeBatch(db);
     for (const i of picked) {
       const pts = readPoints(fd.get(`pts${i}`));
@@ -1431,113 +1453,120 @@ function ideasForm(kind) {
         : { title, cost: pts, status: "active", suggestedBy: null, createdAt: serverTimestamp() });
     }
     await batch.commit();
-    toast(`${picked.length} ${isTasks ? "tarefa(s)" : "prémio(s)"} adicionado(s).`);
-  }, "Adicionar");
+    toast(isTasks ? tr("{n} tarefa(s) adicionada(s).", { n: picked.length }) : tr("{n} prémio(s) adicionado(s).", { n: picked.length }));
+  }, tr("Adicionar"));
   const all = form.querySelector("#pickAll");
   all.onchange = () => form.querySelectorAll("[name=pick]").forEach((c) => (c.checked = all.checked));
 }
 
 function rewardForm(reward) {
   const isSuggestion = reward?.status === "suggested";
-  const form = openForm(isSuggestion ? "Dar preço à sugestão" : reward ? "Editar prémio" : "Novo prémio", `
-    <label>Prémio</label><input name="title" required maxlength="80" value="${esc(reward?.title || "")}" placeholder="Ex: 30 min extra de consola">
-    <label>Custa quantos pontos?</label><input name="cost" type="number" inputmode="numeric" min="1" required value="${reward?.cost ?? ""}">
-    ${reward && !isSuggestion ? `<button type="button" class="bad" id="delReward" style="margin-top:16px">Apagar prémio</button>` : ""}`,
+  const form = openForm(isSuggestion ? tr("Dar preço à sugestão") : reward ? tr("Editar prémio") : tr("Novo prémio"), `
+    <label>${tr("Prémio")}</label><input name="title" required maxlength="80" value="${esc(reward?.title || "")}" placeholder="${tr("Ex: 30 min extra de consola")}">
+    <label>${tr("Custa quantos pontos?")}</label><input name="cost" type="number" inputmode="numeric" min="1" required value="${reward?.cost ?? ""}">
+    ${reward && !isSuggestion ? `<button type="button" class="bad" id="delReward" style="margin-top:16px">${tr("Apagar prémio")}</button>` : ""}`,
   async (fd) => {
     const title = fd.get("title").trim();
-    if (!title) throw new Error("Escreve o nome do prémio.");
+    if (!title) throw new Error(tr("Escreve o nome do prémio."));
     const data = { title, cost: readPoints(fd.get("cost")), status: "active" };
     if (reward) await updateDoc(doc(col("rewards"), reward.id), data);
     else await addDoc(col("rewards"), { ...data, suggestedBy: null, createdAt: serverTimestamp() });
-  }, isSuggestion ? "Aprovar" : "Guardar");
+  }, isSuggestion ? tr("Aprovar") : tr("Guardar"));
   const del = form.querySelector("#delReward");
   if (del) del.onclick = () => guard(async () => {
-    if (!confirm("Apagar este prémio?")) return;
+    if (!confirm(tr("Apagar este prémio?"))) return;
     await updateDoc(doc(col("rewards"), reward.id), { status: "archived" });
     closeModal();
   });
 }
 
 function openSettings() {
-  const form = openForm("Definições", `
-    <label>Foto do perfil Pai / Mãe</label>${photoFieldHtml()}
-    <label>Mudar PIN do pai/mãe</label>
-    <input name="pin" type="password" inputmode="numeric" maxlength="6" placeholder="Novo PIN (deixa vazio para manter)" autocomplete="off">
-    <label>Os filhos podem marcar tarefas até quantos dias para trás?</label>
+  const form = openForm(tr("Definições"), `
+    <label>${tr("Língua")}</label>
+    <select name="lang">${Object.entries(LANGS).map(([k, v]) => `<option value="${k}" ${k === LANG ? "selected" : ""}>${v}</option>`).join("")}</select>
+    <p class="small muted">${tr("Muda a língua em todos os aparelhos da família, incluindo as notificações.")}</p>
+    <label>${tr("Foto do perfil Pai / Mãe")}</label>${photoFieldHtml()}
+    <label>${tr("Mudar PIN do pai/mãe")}</label>
+    <input name="pin" type="password" inputmode="numeric" maxlength="6" placeholder="${tr("Novo PIN (deixa vazio para manter)")}" autocomplete="off">
+    <label>${tr("Os filhos podem marcar tarefas até quantos dias para trás?")}</label>
     <input name="backDays" type="number" inputmode="numeric" min="0" max="${MAX_BACK_DAYS}" required value="${backDays()}">
-    <p class="small muted">0 = só o próprio dia. Máximo ${MAX_BACK_DAYS}.</p>
-    <label>Aparelhos dos filhos</label>
-    <p class="small muted" id="devCount">A contar aparelhos ligados…</p>
+    <p class="small muted">${tr("0 = só o próprio dia. Máximo {n}.", { n: MAX_BACK_DAYS })}</p>
+    <label>${tr("Aparelhos dos filhos")}</label>
+    <p class="small muted" id="devCount">${tr("A contar aparelhos ligados…")}</p>
     <div class="row wrap">
-      <button type="button" class="good" id="linkDevice">Ligar aparelho de um filho</button>
-      <button type="button" class="bad" id="unlinkAll">Desligar todos</button>
+      <button type="button" class="good" id="linkDevice">${tr("Ligar aparelho de um filho")}</button>
+      <button type="button" class="bad" id="unlinkAll">${tr("Desligar todos")}</button>
     </div>
-    <label>Recomeçar</label>
-    <p class="small muted">Põe o saldo de todos os filhos a 0 e apaga o histórico de pontos (tarefas marcadas, validações, bónus, penalizações e pedidos de prémio). Filhos, tarefas e prémios ficam.</p>
-    <button type="button" class="bad" id="resetPoints">Apagar todos os pontos</button>
-    <p class="small muted" style="margin-top:16px">${isDevice() ? "Aparelho ligado por link" : `Conta: ${esc(S.user.email)}`}</p>
-    <button type="button" class="bad" id="logoutAll" style="margin-top:8px">${isDevice() ? "Desligar este aparelho" : "Sair da conta neste aparelho"}</button>
-    ${isDevice() ? "" : `<label style="margin-top:18px">Apagar conta</label>
-    <p class="small muted">Apaga para sempre a conta da família e todos os dados: filhos, fotos, tarefas, prémios, pontos e histórico. <a href="privacidade.html" target="_blank">Política de privacidade</a></p>
-    <button type="button" class="bad" id="deleteAccount">Apagar conta e todos os dados</button>`}`,
+    <label>${tr("Recomeçar")}</label>
+    <p class="small muted">${tr("Põe o saldo de todos os filhos a 0 e apaga o histórico de pontos (tarefas marcadas, validações, bónus, penalizações e pedidos de prémio). Filhos, tarefas e prémios ficam.")}</p>
+    <button type="button" class="bad" id="resetPoints">${tr("Apagar todos os pontos")}</button>
+    <p class="small muted" style="margin-top:16px">${isDevice() ? tr("Aparelho ligado por link") : tr("Conta: {email}", { email: esc(S.user.email) })}</p>
+    <button type="button" class="bad" id="logoutAll" style="margin-top:8px">${isDevice() ? tr("Desligar este aparelho") : tr("Sair da conta neste aparelho")}</button>
+    ${isDevice() ? "" : `<label style="margin-top:18px">${tr("Apagar conta")}</label>
+    <p class="small muted">${tr("Apaga para sempre a conta da família e todos os dados: filhos, fotos, tarefas, prémios, pontos e histórico.")} <a href="${legalUrl("privacy")}" target="_blank">${tr("Política de privacidade")}</a></p>
+    <button type="button" class="bad" id="deleteAccount">${tr("Apagar conta e todos os dados")}</button>`}`,
   async (fd) => {
     const pin = fd.get("pin");
     const back = Number(fd.get("backDays"));
-    if (!Number.isInteger(back) || back < 0 || back > MAX_BACK_DAYS) throw new Error(`Escolhe um número de dias entre 0 e ${MAX_BACK_DAYS}.`);
+    if (!Number.isInteger(back) || back < 0 || back > MAX_BACK_DAYS) throw new Error(tr("Escolhe um número de dias entre 0 e {n}.", { n: MAX_BACK_DAYS }));
     const changes = {};
+    const lang = fd.get("lang");
+    if (LANGS[lang] && lang !== (S.fam.lang || LANG)) changes.lang = lang;
+    if (S.fam.tz !== TIMEZONE) changes.tz = TIMEZONE;
     if (pin) {
-      if (!validPin(pin)) throw new Error("O PIN tem de ter 4 a 6 dígitos.");
+      if (!validPin(pin)) throw new Error(tr("O PIN tem de ter 4 a 6 dígitos."));
       changes.parentPinHash = await hashPin(pin);
     }
     if (back !== backDays()) changes.maxBackDays = back;
     if (photo.changed) changes.parentPhoto = photo.dataUrl();
     if (!Object.keys(changes).length) return;
     await updateDoc(famDoc(), changes);
-    toast("Definições guardadas.");
+    if (changes.lang) { setLang(changes.lang); location.reload(); return; }
+    toast(tr("Definições guardadas."));
   });
   const photo = photoEditor(form, S.fam.parentPhoto && PHOTO_RE.test(S.fam.parentPhoto) ? S.fam.parentPhoto : null);
   form.querySelector("#logoutAll").onclick = () => { closeModal(); leaveDevice(); };
   form.querySelector("#linkDevice").onclick = () => guard(openLinkDevice);
   const del = form.querySelector("#deleteAccount");
   if (del) del.onclick = () => {
-    if (!confirm("Apagar a conta e TODOS os dados da família? Isto não se pode desfazer.")) return;
-    openForm("Confirmar com a password", `<p class="small muted">Por segurança, escreve a password da conta ${esc(S.user.email)}.</p>
-      <label>Password</label><input name="password" type="password" autocomplete="current-password" required>`,
+    if (!confirm(tr("Apagar a conta e TODOS os dados da família? Isto não se pode desfazer."))) return;
+    openForm(tr("Confirmar com a password"), `<p class="small muted">${tr("Por segurança, escreve a password da conta {email}.", { email: esc(S.user.email) })}</p>
+      <label>${tr("Password")}</label><input name="password" type="password" autocomplete="current-password" required>`,
     async (fd) => {
       try { await reauthenticateWithCredential(S.user, EmailAuthProvider.credential(S.user.email, fd.get("password"))); }
       catch (e) { throw new Error(authError(e.code)); }
       await deleteFamily();
-      toast("Conta e dados apagados.");
-    }, "Apagar tudo");
+      toast(tr("Conta e dados apagados."));
+    }, tr("Apagar tudo"));
   };
   form.querySelector("#resetPoints").onclick = () => guard(async () => {
-    if (!confirm("Apagar TODOS os pontos e o histórico? Isto não se pode desfazer.")) return;
-    if (!confirm("Tens a certeza? Os saldos de todos os filhos voltam a 0.")) return;
+    if (!confirm(tr("Apagar TODOS os pontos e o histórico? Isto não se pode desfazer."))) return;
+    if (!confirm(tr("Tens a certeza? Os saldos de todos os filhos voltam a 0."))) return;
     const n = await resetPoints();
     closeModal();
-    toast(`Pontos apagados (${n} registos). Recomeçar! 🚀`);
+    toast(tr("Pontos apagados ({n} registos). Recomeçar! 🚀", { n }));
   });
   form.querySelector("#unlinkAll").onclick = () => guard(async () => {
-    if (!confirm("Desligar todos os aparelhos ligados por link? Vão precisar de um link novo para voltar a entrar.")) return;
+    if (!confirm(tr("Desligar todos os aparelhos ligados por link? Vão precisar de um link novo para voltar a entrar."))) return;
     const n = await revokeDevices();
-    form.querySelector("#devCount").textContent = `Desligados ${n} aparelho(s). O link antigo deixou de funcionar.`;
+    form.querySelector("#devCount").textContent = tr("Desligados {n} aparelho(s). O link antigo deixou de funcionar.", { n });
   });
   getDocs(col("members")).then((snap) => {
     const el = form.querySelector("#devCount");
-    if (el) el.textContent = snap.size ? `${snap.size} aparelho(s) ligado(s) por link.` : "Nenhum aparelho ligado por link.";
+    if (el) el.textContent = snap.size ? tr("{n} aparelho(s) ligado(s) por link.", { n: snap.size }) : tr("Nenhum aparelho ligado por link.");
   }).catch(() => {});
 }
 
 /** Sair (conta da família) ou desligar (aparelho ligado por link). */
 async function leaveDevice() {
   if (isDevice()) {
-    if (!confirm("Desligar este aparelho? Para voltar a entrar é preciso um link novo do pai/mãe.")) return;
+    if (!confirm(tr("Desligar este aparelho? Para voltar a entrar é preciso um link novo do pai/mãe."))) return;
     await deleteDoc(doc(col("members"), S.user.uid)).catch(() => {});
     await unlinkDevice();
     forgetJoinLink();
     await signOut(auth);
   } else {
-    if (!confirm("Sair da conta da família neste aparelho?")) return;
+    if (!confirm(tr("Sair da conta da família neste aparelho?"))) return;
     await signOut(auth);
   }
 }
@@ -1549,24 +1578,24 @@ async function openLinkDevice() {
     await updateDoc(famDoc(), { inviteToken: token });
   }
   const link = joinLink(token);
-  modal.innerHTML = `<div class="sheet"><h2 style="margin-top:0">Ligar aparelho de um filho</h2>
-    <p>Envia este link para o telemóvel ou tablet do teu filho (WhatsApp, SMS, email…). Ao abri-lo, o aparelho fica ligado à família e o filho só precisa do PIN.</p>
+  modal.innerHTML = `<div class="sheet"><h2 style="margin-top:0">${tr("Ligar aparelho de um filho")}</h2>
+    <p>${tr("Envia este link para o telemóvel ou tablet do teu filho (WhatsApp, SMS, email…). Ao abri-lo, o aparelho fica ligado à família e o filho só precisa do PIN.")}</p>
     <input readonly value="${esc(link)}" id="linkBox" style="font-size:.8rem">
     <div class="row wrap" style="margin-top:10px">
-      ${navigator.share ? `<button class="primary" id="shareLink">Partilhar</button>` : ""}
-      <button id="copyLink">Copiar link</button>
+      ${navigator.share ? `<button class="primary" id="shareLink">${tr("Partilhar")}</button>` : ""}
+      <button id="copyLink">${tr("Copiar link")}</button>
     </div>
-    <p class="small muted" style="margin-top:14px"><b>Ícone no ecrã principal:</b> depois de abrir o link no aparelho do filho, usa logo aí "Adicionar ao ecrã principal".</p>
-    <p class="small muted">⚠️ Quem tiver este link entra na app da família (mas precisa dos PINs). Se o link chegar a quem não devia, usa "Desligar todos".</p>
-    <div class="actions"><button data-close>Fechar</button></div></div>`;
+    <p class="small muted" style="margin-top:14px">${tr("<b>Ícone no ecrã principal:</b> depois de abrir o link no aparelho do filho, usa logo aí \"Adicionar ao ecrã principal\".")}</p>
+    <p class="small muted">⚠️ ${tr("Quem tiver este link entra na app da família (mas precisa dos PINs). Se o link chegar a quem não devia, usa \"Desligar todos\".")}</p>
+    <div class="actions"><button data-close>${tr("Fechar")}</button></div></div>`;
   modal.classList.remove("hidden");
   modal.querySelector("[data-close]").onclick = closeModal;
   modal.querySelector("#copyLink").onclick = async () => {
-    try { await navigator.clipboard.writeText(link); toast("Link copiado."); }
-    catch { const box = modal.querySelector("#linkBox"); box.select(); toast("Seleciona e copia o link."); }
+    try { await navigator.clipboard.writeText(link); toast(tr("Link copiado.")); }
+    catch { const box = modal.querySelector("#linkBox"); box.select(); toast(tr("Seleciona e copia o link.")); }
   };
   const share = modal.querySelector("#shareLink");
-  if (share) share.onclick = () => navigator.share({ title: "SAS Kids", text: "Abre este link para entrar na app:", url: link }).catch(() => {});
+  if (share) share.onclick = () => navigator.share({ title: "SAS Kids", text: tr("Abre este link para entrar na app:"), url: link }).catch(() => {});
 }
 
 /** Saldos a 0 e histórico apagado; filhos, tarefas e prémios mantêm-se. Devolve quantos registos apagou. */
