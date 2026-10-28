@@ -162,6 +162,21 @@ function send(array $fam, array $tokenDocs, string $title, string $body, string 
 }
 
 function plural(int $n, string $one, string $many): string { return "$n " . ($n === 1 ? $one : $many); }
+// Traduções: as mesmas da app (i18n/<língua>.json), com o português como chave.
+function tr(string $lang, string $text, array $vars = []): string {
+    static $dicts = [];
+    if ($lang !== 'pt' && !isset($dicts[$lang])) {
+        $f = __DIR__ . "/../i18n/$lang.json";
+        $dicts[$lang] = is_file($f) ? (json_decode(file_get_contents($f), true) ?: []) : [];
+    }
+    $out = ($lang === 'pt' ? null : ($dicts[$lang][$text] ?? null)) ?: $text;
+    return preg_replace_callback('/\{(\w+)\}/', fn($m) => array_key_exists($m[1], $vars) ? (string)$vars[$m[1]] : $m[0], $out);
+}
+function famLang(array $fam): string {
+    $l = $fam['lang'] ?? '';
+    return in_array($l, ['pt', 'es', 'fr', 'it', 'en', 'zh'], true) ? $l : 'pt';
+}
+
 function signed(int $n): string { return $n > 0 ? "+$n" : '−' . abs($n); }
 function pts(array $e): int { return (int)($e['applied'] ?? $e['points'] ?? 0); }
 function forKid(array $t, string $kidId): bool { return empty($t['kidIds']) || in_array($kidId, $t['kidIds'], true); }
@@ -177,8 +192,11 @@ function processFamily(array $fam): void {
     $tasks = listDocs("$path/tasks");
     $parentTokens = array_filter($tokens, fn($t) => ($t['parent'] ?? false) === true);
     $kidTokens = fn($id) => array_filter($tokens, fn($t) => in_array($id, $t['kids'] ?? [], true));
-    $kidName = fn($id) => $kids[$id]['name'] ?? 'Um filho';
-    $lis = $NOW->setTimezone(new DateTimeZone(TZ));
+    $L = famLang($fam);
+    $T = fn(string $text, array $vars = []) => tr($L, $text, $vars);
+    $kidName = fn($id) => $kids[$id]['name'] ?? $T('Um filho');
+    try { $tz = new DateTimeZone($fam['tz'] ?? TZ); } catch (Throwable $e) { $tz = new DateTimeZone(TZ); }
+    $lis = $NOW->setTimezone($tz);
     $date = $lis->format('Y-m-d'); $time = $lis->format('H:i');
 
     // 1) Pai/mãe: novos pedidos à espera de validação.
@@ -195,15 +213,15 @@ function processFamily(array $fam): void {
         $lines = [];
         foreach ($byKid as $kidId => $k) {
             $parts = [];
-            if ($k['tasks']) $parts[] = 'marcou ' . plural($k['tasks'], 'tarefa', 'tarefas');
-            if ($k['rewards']) $parts[] = 'pediu ' . (count($k['rewards']) === 1 ? "o prémio \"{$k['rewards'][0]}\"" : count($k['rewards']) . ' prémios');
-            if ($k['specials']) $parts[] = 'diz que já cumpriu a missão ' . implode(', ', array_map(fn($t) => "\"$t\"", $k['specials']));
-            if ($k['extras']) $parts[] = 'pede pontos por ' . (count($k['extras']) === 1 ? "\"{$k['extras'][0]}\"" : count($k['extras']) . ' coisas fora da lista');
-            $lines[] = $kidName($kidId) . ' ' . implode(' e ', $parts);
+            if ($k['tasks']) $parts[] = $k['tasks'] === 1 ? $T('marcou 1 tarefa') : $T('marcou {n} tarefas', ['n' => $k['tasks']]);
+            if ($k['rewards']) $parts[] = count($k['rewards']) === 1 ? $T('pediu o prémio "{title}"', ['title' => $k['rewards'][0]]) : $T('pediu {n} prémios', ['n' => count($k['rewards'])]);
+            if ($k['specials']) $parts[] = $T('diz que já cumpriu a missão {list}', ['list' => implode(', ', array_map(fn($t) => "\"$t\"", $k['specials']))]);
+            if ($k['extras']) $parts[] = count($k['extras']) === 1 ? $T('pede pontos por "{title}"', ['title' => $k['extras'][0]]) : $T('pede pontos por {n} coisas fora da lista', ['n' => count($k['extras'])]);
+            $lines[] = $kidName($kidId) . ' ' . implode($T(' e '), $parts);
         }
-        foreach ($newSugg as $r) $lines[] = $kidName($r['suggestedBy'] ?? '') . " sugeriu o prémio \"{$r['title']}\"";
+        foreach ($newSugg as $r) $lines[] = $T('{name} sugeriu o prémio "{title}"', ['name' => $kidName($r['suggestedBy'] ?? ''), 'title' => $r['title']]);
         $hasReward = (bool)array_filter($byKid, fn($k) => $k['rewards']);
-        send($fam, $parentTokens, $hasReward ? '🎁 Pedido de prémio para validar' : '✔️ Há coisas para validar', implode("\n", $lines), 'validar');
+        send($fam, $parentTokens, $hasReward ? $T('🎁 Pedido de prémio para validar') : $T('✔️ Há coisas para validar'), implode("\n", $lines), 'validar');
     }
     updateMany(array_map(fn($d) => [$d['_name'], ['notifiedParent' => true]], array_merge(array_values($newPending), array_values($newSugg))));
 
@@ -220,7 +238,7 @@ function processFamily(array $fam): void {
             $who = array_filter(array_keys($kids), fn($id) => forKid($t, $id) && empty($decided["$id|{$t['_id']}"]));
             if ($who) $lines[] = "\"{$t['title']}\" (" . implode(', ', array_map($kidName, $who)) . ')';
         }
-        if (!$firstRun && $lines) send($fam, $parentTokens, '🚀 Missão terminou', "Decide se ganharam os pontos:\n" . implode("\n", $lines), 'especial');
+        if (!$firstRun && $lines) send($fam, $parentTokens, $T('🚀 Missão terminou'), $T('Decide se ganharam os pontos:') . "\n" . implode("\n", $lines), 'especial');
         updateMany(array_map(fn($t) => [$t['_name'], ['notifiedEnded' => true]], array_values($ended)));
     }
 
@@ -234,19 +252,19 @@ function processFamily(array $fam): void {
         foreach ($byKid as $kidId => $entries) {
             if (!isset($kids[$kidId])) continue;
             $lines = [];
-            foreach ($entries as $e) if (!empty($e['corrected'])) $lines[] = "✏️ Corrigido: {$e['title']} → " . signed(pts($e)) . ' pontos';
+            foreach ($entries as $e) if (!empty($e['corrected'])) $lines[] = $T('✏️ Corrigido: {title} → {n} pontos', ['title' => $e['title'], 'n' => signed(pts($e))]);
             $entries = array_filter($entries, fn($e) => empty($e['corrected']));
             $of = fn($type, $status = null) => array_filter($entries, fn($e) => ($e['type'] ?? '') === $type && ($status === null || $e['status'] === $status));
-            if ($ok = $of('task', 'approved')) $lines[] = '✅ ' . plural(count($ok), 'tarefa validada', 'tarefas validadas') . ': ' . signed(array_sum(array_map('pts', $ok))) . ' pontos';
-            if ($no = $of('task', 'rejected')) $lines[] = '✕ ' . plural(count($no), 'tarefa não foi aceite', 'tarefas não foram aceites');
-            foreach ($of('special') as $e) $lines[] = $e['status'] === 'approved' ? "🚀 Missão cumprida \"{$e['title']}\": " . signed(pts($e)) . ' pontos!' : "🚀 Missão \"{$e['title']}\": desta vez não.";
-            foreach ($of('extra') as $e) $lines[] = $e['status'] === 'approved' ? "💡 {$e['title']}: " . signed(pts($e)) . ' pontos' : "💡 Sem pontos para: {$e['title']}";
-            foreach ($of('bonus') as $e) $lines[] = '🌟 Bónus ' . signed(pts($e)) . ": {$e['title']}";
+            if ($ok = $of('task', 'approved')) $lines[] = count($ok) === 1 ? $T('✅ 1 tarefa validada: {pts} pontos', ['pts' => signed(array_sum(array_map('pts', $ok)))]) : $T('✅ {n} tarefas validadas: {pts} pontos', ['n' => count($ok), 'pts' => signed(array_sum(array_map('pts', $ok)))]);
+            if ($no = $of('task', 'rejected')) $lines[] = count($no) === 1 ? $T('✕ 1 tarefa não foi aceite') : $T('✕ {n} tarefas não foram aceites', ['n' => count($no)]);
+            foreach ($of('special') as $e) $lines[] = $e['status'] === 'approved' ? $T('🚀 Missão cumprida "{title}": {pts} pontos!', ['title' => $e['title'], 'pts' => signed(pts($e))]) : $T('🚀 Missão "{title}": desta vez não.', ['title' => $e['title']]);
+            foreach ($of('extra') as $e) $lines[] = $e['status'] === 'approved' ? $T('💡 {title}: {pts} pontos', ['title' => $e['title'], 'pts' => signed(pts($e))]) : $T('💡 Sem pontos para: {title}', ['title' => $e['title']]);
+            foreach ($of('bonus') as $e) $lines[] = $T('🌟 Bónus {pts}: {title}', ['title' => $e['title'], 'pts' => signed(pts($e))]);
             foreach ($of('penalty') as $e) $lines[] = '⚠️ ' . signed(pts($e)) . ": {$e['title']}";
-            foreach ($of('reward') as $e) $lines[] = $e['status'] === 'approved' ? "🎁 Prémio aprovado: {$e['title']}!" : "🎁 Prémio não aprovado: {$e['title']}";
+            foreach ($of('reward') as $e) $lines[] = $e['status'] === 'approved' ? $T('🎁 Prémio aprovado: {title}!', ['title' => $e['title']]) : $T('🎁 Prémio não aprovado: {title}', ['title' => $e['title']]);
             if (!$lines) continue;
-            $lines[] = 'Tens agora ' . (int)($kids[$kidId]['points'] ?? 0) . ' pontos ⭐';
-            send($fam, $kidTokens($kidId), "{$kids[$kidId]['name']}, os teus pontos mudaram!", implode("\n", $lines), "pontos-$kidId");
+            $lines[] = $T('Tens agora {n} pontos ⭐', ['n' => (int)($kids[$kidId]['points'] ?? 0)]);
+            send($fam, $kidTokens($kidId), $T('{name}, os teus pontos mudaram!', ['name' => $kids[$kidId]['name']]), implode("\n", $lines), "pontos-$kidId");
         }
     }
     updateMany(array_map(fn($d) => [$d['_name'], ['notifiedKid' => true]], array_values($newDecided)));
@@ -264,10 +282,10 @@ function processFamily(array $fam): void {
             $soon = array_filter($specials, fn($t) => in_array($t['deadline'], [$date, $tom], true) && forKid($t, $kidId) && empty($claimed["$kidId|{$t['_id']}"]));
             if (!$left && !$soon) continue;
             $lines = [];
-            if ($left) $lines[] = $left === 1 ? 'Falta 1 tarefa de hoje. Já a fizeste? Marca-a na app antes de dormir.'
-                : "Faltam $left tarefas de hoje. Já as fizeste? Marca-as na app antes de dormir.";
-            foreach ($soon as $t) $lines[] = "🚀 A missão \"{$t['title']}\" acaba " . ($t['deadline'] === $date ? 'hoje' : 'amanhã') . '!';
-            send($fam, $kidTokens($kidId), "⏰ {$kid['name']}, ainda tens tarefas!", implode("\n", $lines), "lembrete-$kidId");
+            if ($left) $lines[] = $left === 1 ? $T('Falta 1 tarefa de hoje. Já a fizeste? Marca-a na app antes de dormir.')
+                : $T('Faltam {n} tarefas de hoje. Já as fizeste? Marca-as na app antes de dormir.', ['n' => $left]);
+            foreach ($soon as $t) $lines[] = $t['deadline'] === $date ? $T('🚀 A missão "{title}" acaba hoje!', ['title' => $t['title']]) : $T('🚀 A missão "{title}" acaba amanhã!', ['title' => $t['title']]);
+            send($fam, $kidTokens($kidId), $T('⏰ {name}, ainda tens tarefas!', ['name' => $kid['name']]), implode("\n", $lines), "lembrete-$kidId");
         }
         updateMany([[$fam['_name'], ['notify.lastReminderDate' => $date]]]);
     }
