@@ -498,5 +498,21 @@
  "Faltam {n} tarefas de hoje. Já as fizeste? Marca-as na app antes de dormir.": "Il te reste {n} tâches aujourd'hui. Tu les as faites ? Coche-les dans l'app avant d'aller dormir.",
  "🚀 A missão \"{title}\" acaba hoje!": "🚀 La mission \"{title}\" se termine aujourd'hui !",
  "🚀 A missão \"{title}\" acaba amanhã!": "🚀 La mission \"{title}\" se termine demain !",
- "⏰ {name}, ainda tens tarefas!": "⏰ {name}, il te reste des tâches !"
+ "⏰ {name}, ainda tens tarefas!": "⏰ {name}, il te reste des tâches !",
+ "Primeiro, instala a app": "D'abord, installe l'appli",
+ "No iPhone e no iPad, a Apple só deixa receber notificações na app instalada no ecrã principal. No Safari não funciona.": "Sur iPhone et iPad, Apple n'autorise les notifications que dans l'appli ajoutée à l'écran d'accueil. Elles ne marchent pas dans Safari.",
+ "Toca em <b>Partilhar</b> (o quadrado com a seta, em baixo).": "Touche <b>Partager</b> (le carré avec la flèche, en bas).",
+ "Toca em <b>Adicionar ao ecrã principal</b> e depois em <b>Adicionar</b>.": "Touche <b>Sur l'écran d'accueil</b>, puis <b>Ajouter</b>.",
+ "Abre a SAS Kids <b>pelo ícone</b>, entra e toca outra vez no sino.": "Ouvre SAS Kids <b>depuis l'icône</b>, connecte-toi et touche de nouveau la cloche.",
+ "As notificações estão bloqueadas": "Les notifications sont bloquées",
+ "Este aparelho recusou as notificações da SAS Kids. Para as voltar a ligar:": "Cet appareil a bloqué les notifications de SAS Kids. Pour les réactiver :",
+ "Abre as <b>Definições</b> do iPhone.": "Ouvre les <b>Réglages</b> de l'iPhone.",
+ "Toca em <b>Notificações</b> e depois em <b>SAS Kids</b>.": "Touche <b>Notifications</b>, puis <b>SAS Kids</b>.",
+ "Liga <b>Permitir notificações</b>.": "Active <b>Autoriser les notifications</b>.",
+ "Volta à app e toca no sino.": "Reviens dans l'appli et touche la cloche.",
+ "Toca no ícone à esquerda do endereço (ou, na app instalada, mantém o dedo no ícone → <b>Informações da app</b>).": "Touche l'icône à gauche de l'adresse (ou, dans l'appli installée, appuie longuement sur l'icône → <b>Infos sur l'appli</b>).",
+ "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "Ouvre <b>Notifications</b> et choisis <b>Autoriser</b>.",
+ "Este navegador não suporta notificações": "Ce navigateur ne prend pas en charge les notifications",
+ "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "Utilise Chrome sur Android, ou installe l'appli sur l'écran d'accueil de l'iPhone.",
+ "Percebi": "Compris"
 }

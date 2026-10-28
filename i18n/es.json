@@ -498,5 +498,21 @@
  "Faltam {n} tarefas de hoje. Já as fizeste? Marca-as na app antes de dormir.": "Te faltan {n} tareas de hoy. ¿Ya las has hecho? Márcalas en la app antes de dormir.",
  "🚀 A missão \"{title}\" acaba hoje!": "🚀 ¡La misión \"{title}\" acaba hoy!",
  "🚀 A missão \"{title}\" acaba amanhã!": "🚀 ¡La misión \"{title}\" acaba mañana!",
- "⏰ {name}, ainda tens tarefas!": "⏰ {name}, ¡aún tienes tareas!"
+ "⏰ {name}, ainda tens tarefas!": "⏰ {name}, ¡aún tienes tareas!",
+ "Primeiro, instala a app": "Primero, instala la app",
+ "No iPhone e no iPad, a Apple só deixa receber notificações na app instalada no ecrã principal. No Safari não funciona.": "En iPhone y iPad, Apple solo permite notificaciones en la app añadida a la pantalla de inicio. En Safari no funcionan.",
+ "Toca em <b>Partilhar</b> (o quadrado com a seta, em baixo).": "Toca <b>Compartir</b> (el cuadrado con la flecha, abajo).",
+ "Toca em <b>Adicionar ao ecrã principal</b> e depois em <b>Adicionar</b>.": "Toca <b>Añadir a pantalla de inicio</b> y luego <b>Añadir</b>.",
+ "Abre a SAS Kids <b>pelo ícone</b>, entra e toca outra vez no sino.": "Abre SAS Kids <b>desde el icono</b>, entra y vuelve a tocar la campana.",
+ "As notificações estão bloqueadas": "Las notificaciones están bloqueadas",
+ "Este aparelho recusou as notificações da SAS Kids. Para as voltar a ligar:": "Este dispositivo ha bloqueado las notificaciones de SAS Kids. Para volver a activarlas:",
+ "Abre as <b>Definições</b> do iPhone.": "Abre los <b>Ajustes</b> del iPhone.",
+ "Toca em <b>Notificações</b> e depois em <b>SAS Kids</b>.": "Toca <b>Notificaciones</b> y luego <b>SAS Kids</b>.",
+ "Liga <b>Permitir notificações</b>.": "Activa <b>Permitir notificaciones</b>.",
+ "Volta à app e toca no sino.": "Vuelve a la app y toca la campana.",
+ "Toca no ícone à esquerda do endereço (ou, na app instalada, mantém o dedo no ícone → <b>Informações da app</b>).": "Toca el icono a la izquierda de la dirección (o, en la app instalada, mantén pulsado el icono → <b>Información de la app</b>).",
+ "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "Abre <b>Notificaciones</b> y elige <b>Permitir</b>.",
+ "Este navegador não suporta notificações": "Este navegador no admite notificaciones",
+ "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "Usa Chrome en Android, o instala la app en la pantalla de inicio del iPhone.",
+ "Percebi": "Entendido"
 }

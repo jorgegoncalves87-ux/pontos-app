@@ -501,3 +501,29 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .lp-nav .lang-sel { flex: none; }
 .compact-lang { text-align: center; margin-top: 16px; }
 @media (max-width: 760px) { .lp-nav > .lang-sel { display: none; } }
+
+/* Ícones desenhados (sem emojis) */
+.icon { width: 24px; height: 24px; display: block; }
+.tabs button .ic { display: grid; place-items: center; width: 56px; height: 32px; padding: 0; border-radius: 999px; color: var(--muted); transition: background .2s, color .2s, transform .2s; }
+.tabs button .ic .icon { width: 25px; height: 25px; }
+.tabs button.active .ic { background: var(--mint); color: var(--primary); transform: translateY(-1px); }
+.tabs button.active .ic .icon { stroke-width: 2.3; }
+.icon-btn { border: none; background: #fff; box-shadow: var(--shadow); width: 40px; height: 40px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; color: var(--muted); vertical-align: middle; margin-left: 6px; }
+.icon-btn .icon { width: 22px; height: 22px; }
+.icon-btn.on { color: var(--primary); background: var(--mint); }
+.header > div { display: flex; align-items: center; gap: 2px; }
+
+/* Avisos curtos: caixa arredondada que nunca corta o texto */
+.toast { border-radius: 18px; padding: 12px 18px; max-width: min(360px, calc(100% - 32px)); width: max-content; text-align: center;
+  line-height: 1.35; box-shadow: 0 10px 30px rgba(47, 54, 87, .25); bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+/* Ajuda das notificações */
+.sheet.help { text-align: left; }
+.sheet.help .help-mascot { display: block; width: 96px; margin: -4px auto 4px; }
+.sheet.help h2 { text-align: center; margin: 4px 0 8px; }
+.help-steps { padding: 0; margin: 12px 0 0; list-style: none; counter-reset: s; display: grid; gap: 10px; }
+.help-steps li { counter-increment: s; display: grid; grid-template-columns: 86px 1fr; gap: 12px; align-items: center; background: var(--bg); border-radius: 18px; padding: 8px 12px 8px 8px; position: relative; }
+.help-steps li::before { content: counter(s); position: absolute; top: 4px; left: 4px; width: 24px; height: 24px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 800; font-size: .85rem; display: grid; place-items: center; }
+.help-steps .help-img { width: 86px; display: block; }
+.help-steps.text li { grid-template-columns: 1fr; padding: 12px 12px 12px 40px; }
+.help-steps.text li::before { top: 50%; transform: translateY(-50%); left: 10px; }

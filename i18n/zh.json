@@ -498,5 +498,21 @@
  "Faltam {n} tarefas de hoje. Já as fizeste? Marca-as na app antes de dormir.": "今天还有 {n} 项任务。做完了吗？睡前在应用里标记一下吧。",
  "🚀 A missão \"{title}\" acaba hoje!": "🚀 挑战任务“{title}”今天截止！",
  "🚀 A missão \"{title}\" acaba amanhã!": "🚀 挑战任务“{title}”明天截止！",
- "⏰ {name}, ainda tens tarefas!": "⏰ {name}，你还有任务没做哦！"
+ "⏰ {name}, ainda tens tarefas!": "⏰ {name}，你还有任务没做哦！",
+ "Primeiro, instala a app": "请先安装应用",
+ "No iPhone e no iPad, a Apple só deixa receber notificações na app instalada no ecrã principal. No Safari não funciona.": "在 iPhone 和 iPad 上，Apple 只允许添加到主屏幕的应用接收通知。在 Safari 中无法使用。",
+ "Toca em <b>Partilhar</b> (o quadrado com a seta, em baixo).": "点按<b>分享</b>（底部带箭头的方框）。",
+ "Toca em <b>Adicionar ao ecrã principal</b> e depois em <b>Adicionar</b>.": "点按<b>添加到主屏幕</b>，然后点按<b>添加</b>。",
+ "Abre a SAS Kids <b>pelo ícone</b>, entra e toca outra vez no sino.": "<b>从图标</b>打开 SAS Kids，登录后再次点按铃铛。",
+ "As notificações estão bloqueadas": "通知已被阻止",
+ "Este aparelho recusou as notificações da SAS Kids. Para as voltar a ligar:": "此设备已阻止 SAS Kids 的通知。要重新开启：",
+ "Abre as <b>Definições</b> do iPhone.": "打开 iPhone 的<b>设置</b>。",
+ "Toca em <b>Notificações</b> e depois em <b>SAS Kids</b>.": "点按<b>通知</b>，然后点按 <b>SAS Kids</b>。",
+ "Liga <b>Permitir notificações</b>.": "打开<b>允许通知</b>。",
+ "Volta à app e toca no sino.": "回到应用，点按铃铛。",
+ "Toca no ícone à esquerda do endereço (ou, na app instalada, mantém o dedo no ícone → <b>Informações da app</b>).": "点按地址左侧的图标（或者在已安装的应用中，长按图标 → <b>应用信息</b>）。",
+ "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "打开<b>通知</b>，选择<b>允许</b>。",
+ "Este navegador não suporta notificações": "此浏览器不支持通知",
+ "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "在 Android 上请使用 Chrome，或在 iPhone 上把应用添加到主屏幕。",
+ "Percebi": "知道了"
 }

@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.7";
-import { landingHTML } from "./landing.js?v=2026-10-28.7";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.8";
+import { landingHTML } from "./landing.js?v=2026-10-28.8";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -300,13 +300,14 @@ async function sha256hex(text) {
 
 async function pushToken() {
   if (!vapidKey) throw new Error(tr("As notificações ainda não estão configuradas (falta a chave Web Push)."));
+  const fail = (code, msg) => Object.assign(new Error(msg), { pushHelp: code });
+  // No iPhone/iPad só há notificações na app adicionada ao ecrã principal e aberta pelo ícone.
+  if (isIOS() && !isStandalone()) throw fail("ios-install", tr("No iPhone, primeiro adiciona a app ao ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a a partir do ícone."));
   if (!(await messagingSupported().catch(() => false)) || !("serviceWorker" in navigator)) {
-    throw new Error(isIOS() && !isStandalone()
-      ? tr("No iPhone, primeiro adiciona a app ao ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a a partir do ícone.")
-      : tr("Este navegador não suporta notificações."));
+    throw fail("unsupported", tr("Este navegador não suporta notificações."));
   }
   const perm = await Notification.requestPermission();
-  if (perm !== "granted") throw new Error(tr("As notificações foram bloqueadas. Ativa-as nas definições do telemóvel para esta app."));
+  if (perm !== "granted") throw fail("denied", tr("As notificações foram bloqueadas. Ativa-as nas definições do telemóvel para esta app."));
   const reg = await navigator.serviceWorker.register("./sw.js");
   const token = await getToken(getMessaging(fbApp), { vapidKey, serviceWorkerRegistration: reg });
   if (!token) throw new Error(tr("Não foi possível ativar as notificações."));
@@ -321,7 +322,9 @@ async function togglePush(who) {
     try { localStorage.removeItem(pushKey(who)); } catch {}
     toast(tr("Notificações desligadas neste aparelho."));
   } else {
-    const token = await pushToken();
+    let token;
+    try { token = await pushToken(); }
+    catch (e) { if (e.pushHelp) return pushHelp(e.pushHelp); throw e; }
     const id = (await sha256hex(token)).slice(0, 40);
     await setDoc(doc(col("pushTokens"), id), {
       token, updatedAt: serverTimestamp(), device: navigator.userAgent.slice(0, 150),
@@ -332,7 +335,34 @@ async function togglePush(who) {
   }
   render();
 }
-const bellButton = (who) => `<button class="link" id="bell" title="${tr("Notificações")}">${pushOn(who) ? "🔔" : "🔕"}</button>`;
+/** Ajuda quando as notificações não ligam: o que fazer, passo a passo e com imagens. */
+function pushHelp(code) {
+  const img = (f) => `<img src="illustrations/instalar/${LANG}/${f}" alt="" class="help-img">`;
+  let title, body;
+  if (code === "ios-install") {
+    title = tr("Primeiro, instala a app");
+    body = `<p>${tr("No iPhone e no iPad, a Apple só deixa receber notificações na app instalada no ecrã principal. No Safari não funciona.")}</p>
+      <ol class="help-steps">
+        <li>${img("ios-2.svg")}<span>${tr("Toca em <b>Partilhar</b> (o quadrado com a seta, em baixo).")}</span></li>
+        <li>${img("ios-3.svg")}<span>${tr("Toca em <b>Adicionar ao ecrã principal</b> e depois em <b>Adicionar</b>.")}</span></li>
+        <li>${img("ios-5.svg")}<span>${tr("Abre a SAS Kids <b>pelo ícone</b>, entra e toca outra vez no sino.")}</span></li>
+      </ol>`;
+  } else if (code === "denied") {
+    title = tr("As notificações estão bloqueadas");
+    body = `<p>${tr("Este aparelho recusou as notificações da SAS Kids. Para as voltar a ligar:")}</p>
+      ${isIOS() ? `<ol class="help-steps text"><li>${tr("Abre as <b>Definições</b> do iPhone.")}</li><li>${tr("Toca em <b>Notificações</b> e depois em <b>SAS Kids</b>.")}</li><li>${tr("Liga <b>Permitir notificações</b>.")}</li><li>${tr("Volta à app e toca no sino.")}</li></ol>`
+      : `<ol class="help-steps text"><li>${tr("Toca no ícone à esquerda do endereço (ou, na app instalada, mantém o dedo no ícone → <b>Informações da app</b>).")}</li><li>${tr("Abre <b>Notificações</b> e escolhe <b>Permitir</b>.")}</li><li>${tr("Volta à app e toca no sino.")}</li></ol>`}`;
+  } else {
+    title = tr("Este navegador não suporta notificações");
+    body = `<p>${tr("Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.")}</p>`;
+  }
+  modal.innerHTML = `<div class="sheet help"><img src="illustrations/mascote.svg" alt="" class="help-mascot"><h2>${title}</h2>${body}
+    <div class="actions"><button class="primary" data-close>${tr("Percebi")}</button></div></div>`;
+  modal.classList.remove("hidden");
+  modal.querySelector("[data-close]").onclick = closeModal;
+}
+
+const bellButton = (who) => `<button class="icon-btn ${pushOn(who) ? "on" : ""}" id="bell" title="${tr("Notificações")}" aria-label="${tr("Notificações")}">${pushOn(who) ? ICON.bell : ICON.bellOff}</button>`;
 
 // ---------- Render principal ----------
 function render() {
@@ -494,10 +524,25 @@ function renderProfiles() {
   }));
 }
 
+// ---------- Ícones (desenhados à mão, no estilo da mascote; herdam a cor do texto) ----------
+const svg = (body) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const FILL = 'fill="currentColor" fill-opacity=".16"';
+const ICON = {
+  validate: svg(`<rect x="3" y="3" width="18" height="18" rx="6" ${FILL}/><path d="M8 12.4l2.7 2.7L16.2 9.4"/>`),
+  kids: svg(`<circle cx="9" cy="8" r="3.3" ${FILL}/><circle cx="16.6" cy="9.6" r="2.6" ${FILL}/><path d="M3.4 19.5c.6-3.4 2.9-5.3 5.6-5.3s5 1.9 5.6 5.3"/><path d="M14.6 15c.6-.4 1.3-.6 2-.6 2.2 0 3.7 1.5 4.1 4.6"/>`),
+  tasks: svg(`<rect x="5" y="4.5" width="14" height="16.5" rx="3.5" ${FILL}/><rect x="9" y="2.5" width="6" height="4" rx="1.6" fill="#fff"/><path d="M8.6 12.6l1.9 1.9 3.9-3.9"/><path d="M9 17.4h6"/>`),
+  rewards: svg(`<rect x="4" y="11" width="16" height="10" rx="2.5" ${FILL}/><rect x="2.8" y="7.6" width="18.4" height="4" rx="1.6"/><path d="M12 7.6V21"/><path d="M12 7.6C10.6 4.4 6.8 3.8 6.8 6.2c0 1.4 2.4 1.4 5.2 1.4zM12 7.6c1.4-3.2 5.2-3.8 5.2-1.4 0 1.4-2.4 1.4-5.2 1.4z"/>`),
+  history: svg(`<circle cx="12" cy="12" r="9" ${FILL}/><path d="M12 7.2V12l3.2 2"/>`),
+  bell: svg(`<path d="M6.2 16.5V11a5.8 5.8 0 0 1 11.6 0v5.5l1.5 2H4.7z" ${FILL}/><path d="M10 20.6a2.2 2.2 0 0 0 4 0"/>`),
+  bellOff: svg(`<path d="M6.2 16.5V11a5.8 5.8 0 0 1 11.6 0v5.5l1.5 2H4.7z"/><path d="M10 20.6a2.2 2.2 0 0 0 4 0"/><path d="M3.5 3.5l17 17"/>`),
+  settings: svg(`<path d="M12 2.8l2 1.9 2.7-.5.9 2.6 2.5 1.2-.6 2.7 1.6 2.2-1.6 2.2.6 2.7-2.5 1.2-.9 2.6-2.7-.5-2 1.9-2-1.9-2.7.5-.9-2.6-2.5-1.2.6-2.7L2.9 12l1.6-2.2-.6-2.7 2.5-1.2.9-2.6 2.7.5z" ${FILL}/><circle cx="12" cy="12" r="3.2"/>`),
+  swap: svg(`<path d="M7 7.5h11.5l-3-3M17 16.5H5.5l3 3"/>`),
+};
+
 function renderTabs(tabs) {
   if (!S.tab || !tabs.some((t) => t.id === S.tab)) S.tab = tabs[0].id;
   return `<nav class="tabs">${tabs.map((t) =>
-    `<button data-tab="${t.id}" class="${S.tab === t.id ? "active" : ""}"><span class="ic">${t.icon}</span><span>${t.label}${t.badge ? ` <span class="badge">${t.badge}</span>` : ""}</span></button>`).join("")}</nav>`;
+    `<button data-tab="${t.id}" class="${S.tab === t.id ? "active" : ""}"><span class="ic">${ICON[t.icon]}</span><span>${t.label}${t.badge ? ` <span class="badge">${t.badge}</span>` : ""}</span></button>`).join("")}</nav>`;
 }
 
 /**
@@ -838,9 +883,9 @@ function fixForm(e) {
 // ---------- Vista do filho ----------
 function renderKid(kid) {
   const tabs = [
-    { id: "today", icon: "📋", label: tr("Tarefas") },
-    { id: "rewards", icon: "🎁", label: tr("Prémios") },
-    { id: "history", icon: "📜", label: tr("Histórico") },
+    { id: "today", icon: "tasks", label: tr("Tarefas") },
+    { id: "rewards", icon: "rewards", label: tr("Prémios") },
+    { id: "history", icon: "history", label: tr("Histórico") },
   ];
   const nav = renderTabs(tabs);
   let body = "";
@@ -1042,16 +1087,16 @@ function renderParent() {
   const pending = S.log.filter((e) => e.status === "pending");
   const suggestions = S.rewards.filter((r) => r.status === "suggested");
   const tabs = [
-    { id: "validate", icon: "✔️", label: tr("Validar"), badge: pending.length + suggestions.length + undecidedSpecials().length },
-    { id: "kids", icon: "👧", label: tr("Filhos") },
-    { id: "tasks", icon: "📋", label: tr("Tarefas") },
-    { id: "rewards", icon: "🎁", label: tr("Prémios") },
-    { id: "history", icon: "📜", label: tr("Histórico") },
+    { id: "validate", icon: "validate", label: tr("Validar"), badge: pending.length + suggestions.length + undecidedSpecials().length },
+    { id: "kids", icon: "kids", label: tr("Filhos") },
+    { id: "tasks", icon: "tasks", label: tr("Tarefas") },
+    { id: "rewards", icon: "rewards", label: tr("Prémios") },
+    { id: "history", icon: "history", label: tr("Histórico") },
   ];
   const nav = renderTabs(tabs);
   const views = { validate: parentValidate, kids: parentKids, tasks: parentTasks, rewards: parentRewards, history: parentHistory };
   renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="${tr("Mudar a foto do pai/mãe")}">${parentAvatar("md")}<span class="cam">📷</span></button> ${tr("Pai / Mãe")}</h1>
-    <div>${bellButton("parent")}<button class="link" id="settings">⚙️</button><button class="link" id="switch">${tr("Trocar")}</button></div></div>
+    <div>${bellButton("parent")}<button class="icon-btn" id="settings" title="${tr("Definições")}" aria-label="${tr("Definições")}">${ICON.settings}</button><button class="link" id="switch">${tr("Trocar")}</button></div></div>
     ${views[S.tab]()}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   document.getElementById("settings").onclick = openSettings;
@@ -1226,7 +1271,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.7";
+const APP_VERSION = "2026-10-28.8";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
