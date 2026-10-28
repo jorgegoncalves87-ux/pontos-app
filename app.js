@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.8";
-import { landingHTML } from "./landing.js?v=2026-10-28.8";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.9";
+import { landingHTML } from "./landing.js?v=2026-10-28.9";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -298,7 +298,12 @@ async function sha256hex(text) {
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function pushToken() {
+/**
+ * O iPhone só mostra o pedido de autorização se for feito no próprio toque: qualquer espera
+ * antes (mesmo de milissegundos) faz com que recuse em silêncio. Por isso o pedido é feito
+ * logo no toque do sino e o resultado é passado para aqui.
+ */
+async function pushToken(permRequest) {
   if (!vapidKey) throw new Error(tr("As notificações ainda não estão configuradas (falta a chave Web Push)."));
   const fail = (code, msg) => Object.assign(new Error(msg), { pushHelp: code });
   // No iPhone/iPad só há notificações na app adicionada ao ecrã principal e aberta pelo ícone.
@@ -306,7 +311,7 @@ async function pushToken() {
   if (!(await messagingSupported().catch(() => false)) || !("serviceWorker" in navigator)) {
     throw fail("unsupported", tr("Este navegador não suporta notificações."));
   }
-  const perm = await Notification.requestPermission();
+  const perm = await (permRequest ?? Notification.requestPermission());
   if (perm !== "granted") throw fail("denied", tr("As notificações foram bloqueadas. Ativa-as nas definições do telemóvel para esta app."));
   const reg = await navigator.serviceWorker.register("./sw.js");
   const token = await getToken(getMessaging(fbApp), { vapidKey, serviceWorkerRegistration: reg });
@@ -322,8 +327,11 @@ async function togglePush(who) {
     try { localStorage.removeItem(pushKey(who)); } catch {}
     toast(tr("Notificações desligadas neste aparelho."));
   } else {
+    // Nada de "await" antes disto (ver pushToken).
+    const permRequest = typeof Notification !== "undefined" && Notification.permission === "default" && !(isIOS() && !isStandalone())
+      ? Notification.requestPermission() : null;
     let token;
-    try { token = await pushToken(); }
+    try { token = await pushToken(permRequest); }
     catch (e) { if (e.pushHelp) return pushHelp(e.pushHelp); throw e; }
     const id = (await sha256hex(token)).slice(0, 40);
     await setDoc(doc(col("pushTokens"), id), {
@@ -1271,7 +1279,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.8";
+const APP_VERSION = "2026-10-28.9";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
