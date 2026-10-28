@@ -1,12 +1,12 @@
 // Configuração da app web do Firebase do produto (Consola Firebase → Configurações do projeto → Seus apps).
 // Estes valores não são secretos: a proteção dos dados vem das regras em firestore.rules.
 export const firebaseConfig = {
-  apiKey: "COLOCA_AQUI",
-  authDomain: "COLOCA_AQUI.firebaseapp.com",
-  projectId: "COLOCA_AQUI",
-  storageBucket: "COLOCA_AQUI.firebasestorage.app",
-  messagingSenderId: "COLOCA_AQUI",
-  appId: "COLOCA_AQUI",
+  apiKey: "AIzaSyCFzk046CscPS72bn9wgtPfLI7xPx5S-Y8",
+  authDomain: "pontos-app-efe48.firebaseapp.com",
+  projectId: "pontos-app-efe48",
+  storageBucket: "pontos-app-efe48.firebasestorage.app",
+  messagingSenderId: "1016728303200",
+  appId: "1:1016728303200:web:bde8419a419c25934d3505",
 };
 
 // Chave pública para notificações (Configurações do projeto → Cloud Messaging → Certificados push da Web).
