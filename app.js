@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.13";
-import { landingHTML } from "./landing.js?v=2026-10-28.13";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.14";
+import { landingHTML } from "./landing.js?v=2026-10-28.14";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -268,6 +268,14 @@ if (configured) {
     }
     if (!user.isAnonymous) {
       S.familyId = user.uid;
+      // Sem email confirmado não há acesso aos dados: mostra só o ecrã para confirmar
+      // e envia o email (uma vez por sessão; contas antigas não o receberam ao registar).
+      if (!user.emailVerified) {
+        const k = `sk-verify-sent-${user.uid}`;
+        let sent = false; try { sent = !!sessionStorage.getItem(k); sessionStorage.setItem(k, "1"); } catch {}
+        if (!sent) sendVerification();
+        return render();
+      }
     } else {
       let saved = null;
       try { saved = localStorage.getItem(FAMILY_KEY); } catch {}
@@ -386,9 +394,9 @@ function render() {
   if (S.joining) { app.innerHTML = `<div class="center muted">${tr("A ligar este aparelho…")}</div>`; return; }
   if (!S.user) return renderLogin();
   if (!S.familyId) return renderNotLinked();
+  // Conta dos pais com email por confirmar: não entra (as regras do Firebase também o exigem).
+  if (!isDevice() && !S.user.emailVerified) return renderVerify();
   if (S.fam === undefined) { app.innerHTML = `<div class="center muted">${tr("A carregar…")}</div>`; return; }
-  // Família nova: primeiro confirma-se o email (as famílias que já existiam veem só um aviso).
-  if (S.fam === null && !isDevice() && !S.user.emailVerified) return renderVerify();
   if (S.fam === null) return renderSetup();
   if (S.role && S.role !== "parent" && !kidById(S.role)) {
     // O perfil guardado já não existe (ou os filhos ainda estão a carregar).
@@ -424,7 +432,14 @@ async function checkVerified(silent) {
   const u = auth.currentUser;
   if (!u || u.isAnonymous || app.querySelector("#verifiedBtn") === null && u.emailVerified) return;
   await u.reload().catch((e) => console.warn("reload", e));
-  if (u.emailVerified) { S.user = u; await u.getIdToken(true).catch(() => {}); render(); toast(tr("Email confirmado!")); }
+  if (u.emailVerified) {
+    S.user = u;
+    // Token novo, com email_verified, para as regras do Firebase deixarem entrar.
+    await u.getIdToken(true).catch(() => {});
+    if (!S.unsub.length) startListeners();
+    render();
+    toast(tr("Email confirmado!"));
+  }
   else if (!silent) toast(tr("Ainda não está confirmado. Abre o email e toca no botão."));
 }
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.user && !S.user.isAnonymous) checkVerified(true); });
@@ -513,7 +528,6 @@ function renderLogin() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, reg.email.value.trim(), reg.password.value);
       S.user = cred.user;
-      sendVerification();
     } catch (e) { regErr.textContent = authError(e.code); }
   };
 }
@@ -1157,12 +1171,9 @@ function renderParent() {
   const views = { validate: parentValidate, kids: parentKids, tasks: parentTasks, rewards: parentRewards, history: parentHistory };
   renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="${tr("Mudar a foto do pai/mãe")}">${parentAvatar("md")}<span class="cam">📷</span></button> ${tr("Pai / Mãe")}</h1>
     <div>${bellButton("parent")}<button class="icon-btn" id="settings" title="${tr("Definições")}" aria-label="${tr("Definições")}">${ICON.settings}</button><button class="link" id="switch">${tr("Trocar")}</button></div></div>
-    ${!isDevice() && !S.user.emailVerified && S.tab === "validate" ? `<div class="card verify-banner"><p>${tr("Confirma o teu email para poderes recuperar a password se a esqueceres.")}</p><button class="primary" id="verifyNow">${tr("Enviar email de confirmação")}</button></div>` : ""}
     ${views[S.tab]()}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   document.getElementById("settings").onclick = openSettings;
-  const vn = document.getElementById("verifyNow");
-  if (vn) vn.onclick = () => guard(async () => mailToast(await sendVerification()));
   bindTabs();
   document.getElementById("bell").onclick = () => guard(() => togglePush("parent"));
   document.getElementById("myPhoto").onclick = () => photoForm(tr("Foto do pai/mãe"), S.fam.parentPhoto, (photo) => updateDoc(famDoc(), { parentPhoto: photo }));
@@ -1334,7 +1345,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.13";
+const APP_VERSION = "2026-10-28.14";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever

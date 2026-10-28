@@ -1,10 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Membro da família = a conta da família (email/password) ou um aparelho ligado por link.
+    // Membro da família = a conta da família (email/password, com o email confirmado)
+    // ou um aparelho ligado por link.
     function isMember(familyId) {
       return request.auth != null && (
-        request.auth.uid == familyId ||
+        (request.auth.uid == familyId && request.auth.token.email_verified == true) ||
         exists(/databases/$(database)/documents/families/$(familyId)/members/$(request.auth.uid))
       );
     }
