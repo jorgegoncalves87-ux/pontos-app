@@ -11,8 +11,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.16";
-import { landingHTML } from "./landing.js?v=2026-10-28.16";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.17";
+import { landingHTML } from "./landing.js?v=2026-10-28.17";
+import { SCENES, sceneSvg } from "./scenes.js?v=2026-10-28.17";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -601,6 +602,7 @@ function renderProfiles() {
 const svg = (body) => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 const FILL = 'fill="currentColor" fill-opacity=".16"';
 const ICON = {
+  phone: svg(`<rect x="6.5" y="2.5" width="11" height="19" rx="3" ${FILL}/><path d="M10.5 18h3"/>`),
   validate: svg(`<rect x="3" y="3" width="18" height="18" rx="6" ${FILL}/><path d="M8 12.4l2.7 2.7L16.2 9.4"/>`),
   kids: svg(`<circle cx="9" cy="8" r="3.3" ${FILL}/><circle cx="16.6" cy="9.6" r="2.6" ${FILL}/><path d="M3.4 19.5c.6-3.4 2.9-5.3 5.6-5.3s5 1.9 5.6 5.3"/><path d="M14.6 15c.6-.4 1.3-.6 2-.6 2.2 0 3.7 1.5 4.1 4.6"/>`),
   tasks: svg(`<rect x="5" y="4.5" width="14" height="16.5" rx="3.5" ${FILL}/><rect x="9" y="2.5" width="6" height="4" rx="1.6" fill="#fff"/><path d="M8.6 12.6l1.9 1.9 3.9-3.9"/><path d="M9 17.4h6"/>`),
@@ -643,6 +645,7 @@ const STEPS = () => [
   [ICON.kids, tr("Adiciona um filho")],
   [ICON.tasks, tr("Escolhe as tarefas e os pontos")],
   [ICON.rewards, tr("Escolhe os prémios e os pontos")],
+  [ICON.phone, tr("Liga o aparelho do filho")],
 ];
 /** Barra "1 · 2 · 3" mostrada nas janelas dos primeiros passos. */
 const stepper = (current) => `<ol class="stepper" aria-label="${tr("Primeiros passos")}">${STEPS().map(([ic, label], i) =>
@@ -652,11 +655,12 @@ function welcomeCard() {
   return `<div class="card welcome">
     <img src="illustrations/mascote.svg" alt="" class="welcome-mascot">
     <h2>${tr("Vamos começar!")}</h2>
-    <p class="muted">${tr("Em 3 passos a tua família fica pronta a ganhar pontos.")}</p>
+    <p class="muted">${tr("Em 4 passos a tua família fica pronta a ganhar pontos.")}</p>
     <ol class="welcome-steps">${STEPS().map(([ic, label], i) => `<li><span class="ic">${ic}</span><span class="n">${i + 1}</span><b>${label}</b><span class="small muted">${[
       tr("Nome, idade e um PIN secreto."),
       tr("Já vêm escolhidas a pensar na idade: confirma os pontos de cada uma."),
       tr("O que se pode ganhar com os pontos: confirma quanto custa cada um."),
+      tr("Lê o código QR com o telemóvel ou tablet do filho, ou envia-lhe o link."),
     ][i]}</span></li>`).join("")}</ol>
     <p class="tip">💡 ${tr("A qualquer momento podes adicionar, mudar ou remover tarefas e prémios.")}</p>
     <button class="primary block" id="addKid">+ ${tr("Adicionar o primeiro filho")}</button>
@@ -666,18 +670,29 @@ function welcomeCard() {
 // ---------- Mascote ----------
 // A mascote vem inline (e não num <img>) para os braços e as pernas poderem dançar.
 let mascotSvg = null;
-async function mascotDance(msg) {
-  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg")).text(); } catch { return toast(msg); }
+/**
+ * Cena da mascote para uma tarefa ou missão: as que vieram das sugestões têm uma animação própria
+ * (guardada em task.scene; nas outras reconhece-se pelo título). As restantes usam a dança normal.
+ */
+function sceneFor(t) {
+  if (!t) return null;
+  if (t.scene && SCENES[t.scene]) return t.scene;
+  const title = (t.title || "").trim().toLowerCase();
+  return TASK_IDEAS.find((i) => i[0].toLowerCase() === title)?.[4] || MISSION_IDEAS.find((m) => m[0].toLowerCase() === title)?.[2] || null;
+}
+async function mascotDance(msg, scene = null) {
+  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg?v=2026-10-28.17")).text(); } catch { return toast(msg); }
+  const stage = scene && sceneSvg(scene, mascotSvg);
   document.querySelector(".dance")?.remove();
   const el = document.createElement("div");
   el.className = "dance";
   el.setAttribute("role", "status");
   el.innerHTML = `<div class="dance-stars">${"⭐🌟✨⭐🌟✨⭐🌟".split(/(?=[⭐🌟✨])/u).map((c, i) => `<i style="--i:${i}">${c}</i>`).join("")}</div>
-    <div class="dance-bubble">${esc(msg)}</div><div class="dance-mascot">${mascotSvg}</div>`;
+    <div class="dance-bubble">${esc(msg)}</div><div class="dance-mascot ${stage ? "wide" : ""}">${stage || mascotSvg}</div>`;
   document.body.appendChild(el);
   const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 300); };
   el.onclick = close;
-  setTimeout(close, 2800);
+  setTimeout(close, stage ? 3800 : 2800);
 }
 
 // ---------- Regras de negócio ----------
@@ -739,19 +754,19 @@ async function decideSpecial(task, kidId, won) {
 }
 
 // Ideias para começar (o pai/mãe escolhe quais quer adicionar).
-// Tarefas: [título, pontos, idade mínima, idade máxima]. Uma criança que faça tudo ganha 30–50 pontos por dia;
+// Tarefas: [título, pontos, idade mínima, idade máxima, cena da mascote (scenes.js)]. Uma criança que faça tudo ganha 30–50 pontos por dia;
 // os prémios vão de 1–2 dias (pequenos) a 1–2 meses (grandes) de esforço.
 const TASK_IDEAS = [
-  [tr("Fazer a cama"), 5, 4, 17], [tr("Lavar os dentes (manhã e noite)"), 5, 4, 17], [tr("Vestir-se sozinho(a)"), 3, 4, 8],
-  [tr("Arrumar os brinquedos"), 5, 4, 9], [tr("Pôr a roupa suja no cesto"), 3, 4, 17], [tr("Pôr a mesa"), 5, 5, 17],
-  [tr("Levantar a mesa"), 5, 5, 17], [tr("Comer a fruta e os legumes"), 5, 4, 17], [tr("Tomar banho sem reclamar"), 5, 4, 10],
-  [tr("Ir para a cama à hora combinada"), 5, 4, 17], [tr("Arrumar sapatos e casaco ao chegar"), 3, 4, 17],
-  [tr("Dar comida e água ao animal"), 5, 6, 17], [tr("Preparar a mochila para o dia seguinte"), 5, 6, 17],
-  [tr("Fazer os trabalhos de casa"), 10, 6, 17], [tr("Ler 20 minutos"), 10, 6, 17], [tr("Arrumar o quarto"), 10, 6, 17],
-  [tr("Praticar instrumento ou desporto (15 min)"), 10, 7, 17], [tr("Cumprir o limite de tempo de ecrã"), 10, 7, 17],
-  [tr("Ajudar a arrumar a loiça"), 5, 7, 17], [tr("Levar o lixo ou a reciclagem"), 5, 8, 17],
-  [tr("Estudar para um teste (30 min)"), 15, 9, 17], [tr("Preparar o próprio lanche"), 5, 9, 17],
-  [tr("Estender ou dobrar a roupa"), 10, 10, 17], [tr("Aspirar ou varrer uma divisão"), 10, 10, 17],
+  [tr("Fazer a cama"), 5, 4, 17, "cama"], [tr("Lavar os dentes (manhã e noite)"), 5, 4, 17, "dentes"], [tr("Vestir-se sozinho(a)"), 3, 4, 8, "vestir"],
+  [tr("Arrumar os brinquedos"), 5, 4, 9, "brinquedos"], [tr("Pôr a roupa suja no cesto"), 3, 4, 17, "cesto"], [tr("Pôr a mesa"), 5, 5, 17, "pormesa"],
+  [tr("Levantar a mesa"), 5, 5, 17, "levantarmesa"], [tr("Comer a fruta e os legumes"), 5, 4, 17, "fruta"], [tr("Tomar banho sem reclamar"), 5, 4, 10, "banho"],
+  [tr("Ir para a cama à hora combinada"), 5, 4, 17, "deitar"], [tr("Arrumar sapatos e casaco ao chegar"), 3, 4, 17, "sapatos"],
+  [tr("Dar comida e água ao animal"), 5, 6, 17, "animal"], [tr("Preparar a mochila para o dia seguinte"), 5, 6, 17, "mochila"],
+  [tr("Fazer os trabalhos de casa"), 10, 6, 17, "tpc"], [tr("Ler 20 minutos"), 10, 6, 17, "ler"], [tr("Arrumar o quarto"), 10, 6, 17, "quarto"],
+  [tr("Praticar instrumento ou desporto (15 min)"), 10, 7, 17, "desporto"], [tr("Cumprir o limite de tempo de ecrã"), 10, 7, 17, "ecra"],
+  [tr("Ajudar a arrumar a loiça"), 5, 7, 17, "loica"], [tr("Levar o lixo ou a reciclagem"), 5, 8, 17, "lixo"],
+  [tr("Estudar para um teste (30 min)"), 15, 9, 17, "estudar"], [tr("Preparar o próprio lanche"), 5, 9, 17, "lanche"],
+  [tr("Estender ou dobrar a roupa"), 10, 10, 17, "roupa"], [tr("Aspirar ou varrer uma divisão"), 10, 10, 17, "aspirar"],
 ];
 const REWARD_IDEAS = [
   [tr("Escolher a sobremesa do jantar"), 30], [tr("15 minutos extra de ecrã"), 30], [tr("Escolher a música no carro durante uma semana"), 40],
@@ -765,9 +780,10 @@ const REWARD_IDEAS = [
   [tr("Prenda maior à escolha (até 40 €)"), 1500],
 ];
 // Sugestões ao criar uma missão (o pai/mãe pode escrever outra).
+// [título, pontos, cena da mascote (scenes.js)]
 const MISSION_IDEAS = [
-  [tr("Ler um livro inteiro"), 50], [tr("Arrumar e organizar o armário"), 30], [tr("Ajudar a lavar o carro"), 25],
-  [tr("Aprender algo novo (andar de bicicleta, nadar, atar os sapatos…)"), 60],
+  [tr("Ler um livro inteiro"), 50, "livro"], [tr("Arrumar e organizar o armário"), 30, "armario"], [tr("Ajudar a lavar o carro"), 25, "carro"],
+  [tr("Aprender algo novo (andar de bicicleta, nadar, atar os sapatos…)"), 60, "aprender"],
 ];
 
 /** Registo mais recente de uma tarefa para um filho num dia. */
@@ -1137,7 +1153,7 @@ function bindKidActions(kid) {
         kidId: kid.id, type: "task", taskId: t.id, title: t.title, points: t.points,
         date, status: "pending", createdAt: serverTimestamp(),
       });
-      mascotDance(tr("Boa! Agora o pai/mãe tem de validar."));
+      mascotDance(tr("Boa! Agora o pai/mãe tem de validar."), sceneFor(t));
     } else if (e.status === "pending") {
       await deleteDoc(doc(col("log"), e.id));
     } else {
@@ -1162,7 +1178,7 @@ function bindKidActions(kid) {
       kidId: kid.id, type: "special", taskId: t.id, title: t.title, points: t.points,
       date: today(), status: "pending", createdAt: serverTimestamp(),
     });
-    mascotDance(tr("Missão cumprida! O pai/mãe vai ver. 🤞"));
+    mascotDance(tr("Missão cumprida! O pai/mãe vai ver. 🤞"), sceneFor(t));
   })));
   app.querySelectorAll("[data-special-undo]").forEach((b) => (b.onclick = () => guard(() => deleteDoc(doc(col("log"), b.dataset.specialUndo)))));
   const xf = document.getElementById("extraForm");
@@ -1382,7 +1398,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.16";
+const APP_VERSION = "2026-10-28.17";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1654,13 +1670,13 @@ function ideasForm(kind, { starter = false } = {}) {
       // Tarefas para todas as idades ficam para todos (incluindo filhos futuros); as outras só para quem tem idade.
       const kidIds = allAges(idea) || !kids.length ? [] : kids.map((k) => k.id);
       batch.set(doc(col(isTasks ? "tasks" : "rewards")), isTasks
-        ? { title: idea[0], points: pts, recurring: true, days: [], date: null, kidIds, active: true, createdAt: serverTimestamp() }
+        ? { title: idea[0], points: pts, recurring: true, days: [], date: null, kidIds, scene: idea[4], active: true, createdAt: serverTimestamp() }
         : { title: idea[0], cost: pts, status: "active", suggestedBy: null, createdAt: serverTimestamp() });
     }
     if (picked.length) await batch.commit();
     if (picked.length) toast(isTasks ? tr("{n} tarefa(s) adicionada(s).", { n: picked.length }) : tr("{n} prémio(s) adicionado(s).", { n: picked.length }));
     if (starter && isTasks) setTimeout(() => ideasForm("rewards", { starter }), 50);
-    if (starter && !isTasks) setTimeout(() => { S.tab = "kids"; render(); toast(tr("Tudo pronto! Para ligar o aparelho de cada filho, vai a ⚙️ Definições.")); }, 50);
+    if (starter && !isTasks) setTimeout(() => guard(() => openLinkDevice({ starter })), 50);
   }, tr("Adicionar"));
   const all = form.querySelector("#pickAll");
   all.onchange = () => form.querySelectorAll("[name=pick]").forEach((c) => (c.checked = all.checked));
@@ -1778,15 +1794,31 @@ async function leaveDevice() {
   }
 }
 
-async function openLinkDevice() {
+/** Código QR (SVG) para um texto. A biblioteca só é carregada quando é preciso. */
+async function qrSvg(text) {
+  const { default: qrcode } = await import("./vendor/qrcode.js");
+  const qr = qrcode(0, "M");
+  qr.addData(text); qr.make();
+  const n = qr.getModuleCount(), q = 2;
+  let d = "";
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (qr.isDark(y, x)) d += `M${x + q} ${y + q}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n + 2 * q} ${n + 2 * q}" class="qr" role="img" aria-label="${tr("Código QR do link")}"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#2f3657" shape-rendering="crispEdges"/></svg>`;
+}
+
+/** Ligar o aparelho de um filho: código QR e link. Com starter é o 4.º passo dos primeiros passos. */
+async function openLinkDevice({ starter = false } = {}) {
   let token = S.fam.inviteToken;
   if (!token) {
     token = newToken();
     await updateDoc(famDoc(), { inviteToken: token });
   }
   const link = joinLink(token);
+  let qr = "";
+  try { qr = await qrSvg(link); } catch {}
   modal.innerHTML = `<div class="sheet"><h2 style="margin-top:0">${tr("Ligar aparelho de um filho")}</h2>
-    <p>${tr("Envia este link para o telemóvel ou tablet do teu filho (WhatsApp, SMS, email…). Ao abri-lo, o aparelho fica ligado à família e o filho só precisa do PIN.")}</p>
+    ${starter ? stepper(4) : ""}
+    ${qr ? `<div class="qr-box">${qr}<p class="small">${tr("No telemóvel ou tablet do filho, abre a câmara e aponta para este código.")}</p></div>` : ""}
+    <p>${tr("Ou envia este link para o telemóvel ou tablet do teu filho (WhatsApp, SMS, email…). Ao abri-lo, o aparelho fica ligado à família e o filho só precisa do PIN.")}</p>
     <input readonly value="${esc(link)}" id="linkBox" style="font-size:.8rem">
     <div class="row wrap" style="margin-top:10px">
       ${navigator.share ? `<button class="primary" id="shareLink">${tr("Partilhar")}</button>` : ""}
@@ -1794,9 +1826,12 @@ async function openLinkDevice() {
     </div>
     <p class="small muted" style="margin-top:14px">${tr("<b>Ícone no ecrã principal:</b> depois de abrir o link no aparelho do filho, usa logo aí \"Adicionar ao ecrã principal\".")}</p>
     <p class="small muted">⚠️ ${tr("Quem tiver este link entra na app da família (mas precisa dos PINs). Se o link chegar a quem não devia, usa \"Desligar todos\".")}</p>
-    <div class="actions"><button data-close>${tr("Fechar")}</button></div></div>`;
+    <div class="actions"><button ${starter ? 'class="primary"' : ""} data-close>${starter ? tr("Concluir") : tr("Fechar")}</button></div></div>`;
   modal.classList.remove("hidden");
-  modal.querySelector("[data-close]").onclick = closeModal;
+  modal.querySelector("[data-close]").onclick = () => {
+    closeModal();
+    if (starter) { S.tab = "kids"; render(); mascotDance(tr("Tudo pronto! Boa sorte com as tarefas.")); }
+  };
   modal.querySelector("#copyLink").onclick = async () => {
     try { await navigator.clipboard.writeText(link); toast(tr("Link copiado.")); }
     catch { const box = modal.querySelector("#linkBox"); box.select(); toast(tr("Seleciona e copia o link.")); }

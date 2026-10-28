@@ -422,7 +422,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
   background: rgba(255, 253, 248, .82); backdrop-filter: blur(3px); animation: dance-in .25s ease-out; cursor: pointer; }
 .dance.out { opacity: 0; transition: opacity .3s; }
 .dance-mascot { width: min(64vw, 260px); }
-.dance-mascot svg { width: 100%; height: auto; overflow: visible; display: block; }
+.dance-mascot > svg { width: 100%; height: auto; overflow: visible; display: block; }
 .dance-bubble { background: #fff; border: 3px solid var(--mint); border-radius: 22px; padding: 12px 18px; font-weight: 800; font-size: 1.15rem;
   color: var(--text); max-width: 300px; text-align: center; box-shadow: var(--shadow); margin-bottom: 6px; animation: bubble 2.6s ease-in-out; }
 .dance svg g { transform-box: fill-box; }
@@ -569,3 +569,160 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 .stepper .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: #f3f1f9; color: var(--muted); }
 .stepper li.now { color: var(--text); font-weight: 700; } .stepper li.now .dot { background: var(--teal); color: #fff; box-shadow: 0 0 0 4px var(--mint); }
 .stepper li.done .dot { background: var(--mint); color: var(--primary); } .stepper li.done:not(:last-child)::after { background: var(--teal); }
+.stepper li { min-width: 0; }
+.qr-box { text-align: center; background: var(--sky); border-radius: 20px; padding: 14px; margin: 4px 0 12px; }
+.qr-box .qr { width: min(60vw, 220px); height: auto; display: block; margin: 0 auto 8px; border-radius: 12px; border: 6px solid #fff; }
+.qr-box p { margin: 0; }
+.welcome-steps li:nth-child(4) .ic { background: var(--sky); }
+
+/* Cenas da mascote (scenes.js): uma por tarefa sugerida */
+.dance-mascot.wide { width: min(92vw, 400px); }
+.dance .scene { width: 100%; height: auto; display: block; overflow: visible; }
+.dance .scene .m-all, .dance .scene .m-head, .dance .scene .m-arm-l, .dance .scene .m-arm-r,
+.dance .scene .m-leg-l, .dance .scene .m-leg-r, .dance .scene .m-shadow { animation: none; transform-box: view-box; }
+.scene .m-star, .scene .m-spark { display: none; }
+.dance .scene g:not([class]) { transform-box: view-box; }
+.scene .m-all { transform-origin: 150px 352px; }
+.scene .m-head { transform-origin: 150px 180px; }
+.scene .m-arm-l { transform-origin: 118px 200px; transform: rotate(-138deg); }
+.scene .m-arm-r { transform-origin: 184px 200px; transform: rotate(88deg); }
+.scene .m-leg-l { transform-origin: 134px 262px; }
+.scene .m-leg-r { transform-origin: 168px 262px; transform: rotate(40deg); }
+.scene .p { transform-box: fill-box; transform-origin: center; }
+.scene .s-toss { animation: s-toss .7s cubic-bezier(.3,.6,.4,1) var(--d) both; }
+.scene .s-pop { animation: s-pop .45s cubic-bezier(.3,1.6,.5,1) var(--d) both; }
+.scene .s-drop { animation: s-drop .55s cubic-bezier(.5,0,.6,1.3) var(--d) both; }
+.scene .s-rise { animation: s-rise 1.6s ease-out var(--d) infinite both; }
+.scene .s-fall { animation: s-fall .9s ease-in var(--d) infinite both; }
+.scene .s-zzz { animation: s-zzz 2.4s ease-out var(--d) infinite both; }
+.scene .s-twinkle { animation: s-twinkle 1.2s ease-in-out var(--d) infinite; }
+.scene .s-zip { animation: s-zip .7s ease-out var(--d) forwards; }
+.scene .s-away { animation: s-away .6s ease-in var(--d) forwards; }
+.scene .s-slide { animation: s-slide .7s ease-out var(--d) both; }
+.scene .s-straight { transform-origin: 50% 100%; animation: s-straight .5s cubic-bezier(.3,1.5,.5,1) var(--d) both; }
+.scene .s-dust { animation: s-away-down .4s ease-in var(--d) forwards; }
+.scene .s-blanket { animation: s-blanket 1.4s cubic-bezier(.3,1.3,.5,1) .2s both; }
+.scene .s-bob { animation: s-bob 1s ease-in-out infinite; }
+.scene .s-wag { animation: s-wag .3s ease-in-out infinite alternate; transform-box: view-box; }
+.scene .s-nod { animation: s-nod .5s ease-in-out infinite alternate; }
+.scene .s-bounce { animation: s-pop .3s var(--d) both, s-bob .5s ease-in-out calc(var(--d) + .3s) infinite; }
+.scene .s-kickball { animation: s-kickball 3s ease-out infinite; }
+.scene .s-page { transform-box: fill-box; transform-origin: 0% 50%; animation: s-page 1.2s ease-in-out infinite; }
+.scene .s-brush { animation: s-brush .18s ease-in-out infinite alternate; }
+.scene .s-sponge { animation: s-sponge .3s ease-in-out infinite alternate; }
+.scene .s-pencil { animation: s-pencil .7s ease-in-out infinite; }
+.scene .s-eatfood { animation: s-eatfood 1s ease-in-out infinite; }
+.scene .s-vacuum { animation: s-push 1.2s ease-in-out infinite; }
+.scene .s-sway { transform-box: fill-box; transform-origin: 50% 0%; animation: s-sway 1s ease-in-out infinite alternate; }
+.scene .s-foam { animation: s-nod .25s ease-in-out infinite alternate; }
+.scene .s-lid { transform-box: fill-box; transform-origin: 0% 100%; animation: s-lid 1.6s ease-in-out .1s both; }
+.scene .s-bulb { opacity: .25; animation: s-bulb .5s ease-out 1s forwards; }
+.scene .s-screen { animation: s-screen .4s ease-in 1.4s forwards; }
+.scene .s-sandtop { transform-box: fill-box; transform-origin: 50% 100%; animation: s-sandtop 1.4s linear forwards; }
+.scene .s-sandbot { transform-box: fill-box; transform-origin: 50% 100%; animation: s-sandbot 1.4s linear forwards; }
+
+/* Poses */
+.scene.pose-reach .m-arm-l { animation: s-reach 1s ease-in-out infinite; }
+.scene.pose-reach .m-arm-r, .scene.pose-scrub .m-arm-r, .scene.pose-write .m-arm-r, .scene.pose-pour .m-arm-r, .scene.pose-wave .m-arm-r { transform: rotate(60deg); }
+.scene.pose-reach .m-head, .scene.pose-scrub .m-head, .scene.pose-write .m-head, .scene.pose-pour .m-head { transform: rotate(-7deg); }
+.scene.pose-reach .m-all { animation: s-lean 1s ease-in-out infinite; }
+.scene.pose-scrub .m-arm-l { animation: s-scrub .3s ease-in-out infinite alternate; }
+.scene.pose-write .m-arm-l { transform: rotate(-82deg); animation: s-write .35s ease-in-out infinite alternate; }
+.scene.pose-pour .m-arm-l { transform: rotate(-62deg); }
+.scene.pose-brush .m-arm-r { animation: s-armbrush .18s ease-in-out infinite alternate; }
+.scene.pose-eat .m-arm-r { animation: s-armeat 1s ease-in-out infinite; }
+.scene.pose-eat .m-head, .scene.pose-brush .m-head { animation: s-chew .25s ease-in-out infinite alternate; }
+.scene.pose-read .m-head { animation: s-readhead 1.2s ease-in-out infinite; }
+.scene.pose-sleep .m-head { transform: rotate(12deg); }
+.scene.pose-sleep .m-all { animation: s-breathe 2s ease-in-out infinite; }
+.scene.pose-up .m-arm-l { animation: s-armup 0.6s ease-in-out infinite alternate; }
+.scene.pose-up .m-arm-r { animation: s-armupr 0.6s ease-in-out infinite alternate; }
+.scene.pose-up .m-all { animation: s-hop .6s ease-in-out infinite; }
+.scene.pose-bath .m-all { animation: s-bath 1.2s ease-in-out infinite; }
+.scene.pose-bath .m-leg-l, .scene.pose-bath .m-leg-r, .scene.pose-bath .m-shadow { display: none; }
+.scene.pose-bath .m-arm-l { animation: s-shampoo .25s ease-in-out infinite alternate; }
+.scene.pose-bath .m-arm-r { animation: s-shampoor .25s ease-in-out infinite alternate; }
+.scene.pose-kick .m-leg-l { animation: s-kick 3s ease-in-out infinite; }
+.scene.pose-kick .m-arm-l { transform: rotate(-110deg); }
+.scene.pose-kick .m-arm-r { transform: rotate(-30deg); }
+.scene.pose-wave .m-arm-l { animation: s-wave .35s ease-in-out infinite alternate; }
+.scene.pose-think .m-arm-l { animation: s-think 1s ease-in-out 2 alternate, s-cheer .4s ease-in-out 2s infinite alternate; }
+.scene.pose-think .m-arm-r { transform: rotate(60deg); }
+.scene.pose-think .m-head { animation: s-tilt 2s ease-in-out both; }
+.scene.pose-push .m-all { animation: s-push 1.2s ease-in-out infinite; }
+.scene .s-door { transform-origin: 0% 50%; animation: s-door .6s ease-in-out var(--d) forwards; }
+.scene .s-doorr { transform-origin: 100% 50%; animation: s-door .6s ease-in-out var(--d) forwards; }
+.scene .s-wipe { animation: s-push 1s ease-in-out infinite; }
+.scene .s-speed { animation: s-speed .8s linear var(--d) infinite both; }
+.scene .s-spin { animation: s-spin .6s linear infinite; }
+.scene .s-ridebike, .scene.pose-ride .m-all { animation: s-ride 1.6s ease-in-out infinite; }
+.scene.pose-ride .m-all { animation-name: s-ride2; }
+.scene.pose-ride .m-arm-r { transform: rotate(40deg); }
+.scene.pose-ride .m-arm-l { animation: s-cheer .4s ease-in-out infinite alternate; }
+.scene.pose-ride .m-leg-l { animation: s-pedal .6s ease-in-out infinite alternate; }
+.scene.pose-ride .m-leg-r { animation: s-pedalr .6s ease-in-out infinite alternate; }
+.scene.pose-ride .m-shadow { display: none; }
+@keyframes s-door { to { transform: scaleX(.12); opacity: .9; } }
+@keyframes s-speed { 0% { transform: translateX(40px); opacity: 0; } 30% { opacity: .6; } 100% { transform: translateX(-60px); opacity: 0; } }
+@keyframes s-spin { to { transform: rotate(360deg); } }
+@keyframes s-ride { 0%, 100% { transform: translateX(-12px); } 50% { transform: translateX(12px) translateY(-3px); } }
+@keyframes s-ride2 { 0%, 100% { transform: translateX(-12px) translateY(-6px); } 50% { transform: translateX(12px) translateY(-9px); } }
+@keyframes s-pedal { from { transform: rotate(-30deg); } to { transform: rotate(6deg); } }
+@keyframes s-pedalr { from { transform: rotate(10deg); } to { transform: rotate(46deg); } }
+.scene.pose-push .m-arm-l { transform: rotate(-70deg); }
+.scene.pose-push .m-arm-r { transform: rotate(70deg); }
+.scene.pose-push .m-leg-l { animation: s-step .3s ease-in-out infinite alternate; }
+.scene.pose-push .m-leg-r { animation: s-stepr .3s ease-in-out infinite alternate; }
+
+@keyframes s-toss { 0% { transform: translate(var(--dx), var(--dy)); opacity: 0; } 10% { opacity: 1; } 50% { transform: translate(calc(var(--dx) * .5), calc(var(--dy) * .5 - 110px)) rotate(180deg); } 100% { transform: none; } }
+@keyframes s-pop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes s-drop { 0% { transform: translateY(var(--h)); opacity: 0; } 30% { opacity: 1; } 100% { transform: none; } }
+@keyframes s-rise { 0% { transform: translateY(0) scale(.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-90px) scale(1.1); opacity: 0; } }
+@keyframes s-fall { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(100px); opacity: 0; } }
+@keyframes s-zzz { 0% { transform: translate(0, 0) scale(.5); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate(30px, -70px) scale(1.2); opacity: 0; } }
+@keyframes s-twinkle { 0%, 100% { transform: scale(.6); opacity: .5; } 50% { transform: scale(1.2); opacity: 1; } }
+@keyframes s-zip { to { stroke-dashoffset: 0; } }
+@keyframes s-away { to { transform: translate(140px, -120px) scale(.3); opacity: 0; } }
+@keyframes s-away-down { to { transform: scale(0); opacity: 0; } }
+@keyframes s-slide { from { transform: translateX(180px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes s-straight { from { transform: rotate(var(--r)); } to { transform: none; } }
+@keyframes s-blanket { 0% { transform: translate(-16px, -16px) rotate(-14deg) scale(.7, 1.5); } 40% { transform: translate(-6px, -4px) rotate(4deg) scale(.95, 1.1); } 100% { transform: none; } }
+@keyframes s-bob { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-6px) rotate(4deg); } }
+@keyframes s-wag { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+@keyframes s-nod { from { transform: translateY(0); } to { transform: translateY(5px); } }
+@keyframes s-kickball { 0%, 47% { transform: translate(160px, 30px); } 70% { transform: translate(120px, -60px) rotate(-360deg); } 85%, 100% { transform: rotate(-540deg); } }
+@keyframes s-page { 0% { transform: scaleX(1); } 50%, 100% { transform: scaleX(-1); } }
+@keyframes s-brush { from { transform: translateX(0); } to { transform: translateX(-6px); } }
+@keyframes s-sponge { from { transform: translate(0, 0); } to { transform: translate(-6px, 14px); } }
+@keyframes s-pencil { 0%, 100% { transform: translate(-90px, 6px); } 50% { transform: translate(-20px, 2px); } }
+@keyframes s-eatfood { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-36px, -36px); } }
+@keyframes s-push { 0%, 100% { transform: translateX(-34px); } 50% { transform: translateX(10px); } }
+@keyframes s-sway { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes s-lid { 0%, 10% { transform: none; } 25%, 45% { transform: rotate(-60deg); } 60%, 100% { transform: none; } }
+@keyframes s-bulb { 0% { opacity: .25; transform: scale(.9); } 60% { opacity: 1; transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes s-screen { to { opacity: .08; } }
+@keyframes s-sandtop { to { transform: scaleY(0); } }
+@keyframes s-sandbot { from { transform: scaleY(.1); } to { transform: scaleY(1); } }
+@keyframes s-reach { 0%, 100% { transform: rotate(-82deg); } 50% { transform: rotate(-42deg); } }
+@keyframes s-lean { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(1deg) translateY(-4px); } }
+@keyframes s-scrub { from { transform: rotate(-66deg); } to { transform: rotate(-46deg); } }
+@keyframes s-write { from { transform: rotate(-84deg); } to { transform: rotate(-76deg); } }
+@keyframes s-armbrush { from { transform: rotate(-54deg); } to { transform: rotate(-60deg); } }
+@keyframes s-armeat { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(-60deg); } }
+@keyframes s-chew { from { transform: translateY(0); } to { transform: translateY(3px); } }
+@keyframes s-readhead { 0%, 100% { transform: rotate(-4deg) translateY(4px); } 50% { transform: rotate(4deg) translateY(4px); } }
+@keyframes s-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025, .985); } }
+@keyframes s-armup { from { transform: rotate(-10deg); } to { transform: rotate(14deg); } }
+@keyframes s-armupr { from { transform: rotate(-80deg); } to { transform: rotate(-56deg); } }
+@keyframes s-hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes s-bath { 0%, 100% { transform: translateY(72px) rotate(-2deg); } 50% { transform: translateY(68px) rotate(2deg); } }
+@keyframes s-shampoo { from { transform: rotate(52deg); } to { transform: rotate(70deg); } }
+@keyframes s-shampoor { from { transform: rotate(-96deg); } to { transform: rotate(-80deg); } }
+@keyframes s-kick { 0%, 30% { transform: none; } 42% { transform: rotate(-28deg); } 50% { transform: rotate(50deg); } 70%, 100% { transform: none; } }
+@keyframes s-wave { from { transform: rotate(-4deg); } to { transform: rotate(24deg); } }
+@keyframes s-think { from { transform: rotate(62deg); } to { transform: rotate(74deg); } }
+@keyframes s-cheer { from { transform: rotate(-4deg); } to { transform: rotate(14deg); } }
+@keyframes s-tilt { 0%, 45% { transform: rotate(-8deg); } 60%, 100% { transform: rotate(4deg); } }
+@keyframes s-step { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+@keyframes s-stepr { from { transform: rotate(52deg); } to { transform: rotate(28deg); } }
+@media (prefers-reduced-motion: reduce) { .scene * { animation: none !important; } }

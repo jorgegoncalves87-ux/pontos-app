@@ -574,5 +574,13 @@
  "O que se pode ganhar com os pontos: confirma quanto custa cada um.": "积分可以兑换什么：确认每项奖励需要多少积分。",
  "A qualquer momento podes adicionar, mudar ou remover tarefas e prémios.": "你可以随时添加、修改或删除任务和奖励。",
  "Adicionar o primeiro filho": "添加第一个孩子",
- "Tudo pronto! Para ligar o aparelho de cada filho, vai a ⚙️ Definições.": "全部就绪！要连接每个孩子的设备，请前往 ⚙️ 设置。"
+ "Tudo pronto! Para ligar o aparelho de cada filho, vai a ⚙️ Definições.": "全部就绪！要连接每个孩子的设备，请前往 ⚙️ 设置。",
+ "Liga o aparelho do filho": "连接孩子的设备",
+ "Em 4 passos a tua família fica pronta a ganhar pontos.": "只需 4 步，你的家庭就可以开始赚积分了。",
+ "Lê o código QR com o telemóvel ou tablet do filho, ou envia-lhe o link.": "用孩子的手机或平板扫描二维码，或者把链接发给他。",
+ "Código QR do link": "链接二维码",
+ "No telemóvel ou tablet do filho, abre a câmara e aponta para este código.": "在孩子的手机或平板上打开相机，对准这个二维码。",
+ "Ou envia este link para o telemóvel ou tablet do teu filho (WhatsApp, SMS, email…). Ao abri-lo, o aparelho fica ligado à família e o filho só precisa do PIN.": "或者把这个链接发到孩子的手机或平板（微信、短信、邮件…）。打开后，设备就会连接到家庭，孩子只需输入 PIN 码。",
+ "Concluir": "完成",
+ "Tudo pronto! Boa sorte com as tarefas.": "全部就绪！祝任务顺利。"
 }
