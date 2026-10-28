@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.9";
-import { landingHTML } from "./landing.js?v=2026-10-28.9";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.10";
+import { landingHTML } from "./landing.js?v=2026-10-28.10";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -364,7 +364,9 @@ function pushHelp(code) {
     title = tr("Este navegador não suporta notificações");
     body = `<p>${tr("Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.")}</p>`;
   }
+  const state = `${typeof Notification === "undefined" ? "—" : Notification.permission} · ${isStandalone() ? "app" : "browser"} · v${APP_VERSION}`;
   modal.innerHTML = `<div class="sheet help"><img src="illustrations/mascote.svg" alt="" class="help-mascot"><h2>${title}</h2>${body}
+    <p class="small muted" style="text-align:center;margin-top:12px">${state}</p>
     <div class="actions"><button class="primary" data-close>${tr("Percebi")}</button></div></div>`;
   modal.classList.remove("hidden");
   modal.querySelector("[data-close]").onclick = closeModal;
@@ -1279,7 +1281,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.9";
+const APP_VERSION = "2026-10-28.10";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
