@@ -20,3 +20,6 @@ th { background: #f5f3fb; }
 a { color: var(--teal); }
 footer { text-align: center; color: var(--muted); padding: 28px 16px 40px; background: var(--mint); font-size: .92rem; }
 footer a { margin: 0 8px; }
+footer .langs { margin-top: 10px; }
+footer .langs a { margin: 0 4px; }
+footer .langs a[aria-current] { font-weight: 800; text-decoration: none; color: var(--ink); }
