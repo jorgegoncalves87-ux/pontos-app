@@ -1,16 +1,16 @@
 <?php
-// Notificador da app Pontos da Família, em PHP, para correr no alojamento (cPanel) com uma
+// Notificador da app SAS Kids, em PHP, para correr no alojamento (cPanel) com uma
 // tarefa agendada a cada 5 minutos. Faz o mesmo que notifier/notify.mjs:
 //  - pai/mãe: tarefas marcadas, prémios pedidos e sugeridos, extras, missões feitas ou terminadas;
 //  - filhos: pontos validados/rejeitados, correções, bónus, penalizações e missões;
 //  - filhos, por volta das 19:45 (Lisboa): lembrete se ainda há tarefas do dia por marcar.
 //
 // Uso (Cron Job do cPanel):
-//   php /home/UTILIZADOR/pontos.sfpo.pt/notifier-php/notify.php
+//   php /home/UTILIZADOR/public_html/pontos.sfpo.pt/notifier-php/notify.php
 // A chave da conta de serviço do Firebase fica FORA da pasta pública, em:
 //   /home/UTILIZADOR/pontos-secrets/service-account.json   (ou na variável PONTOS_SERVICE_ACCOUNT)
 // Exemplo de Cron Job (a cada 5 minutos):
-//   /usr/local/bin/php /home/sfpo/pontos.sfpo.pt/notifier-php/notify.php >> /home/sfpo/pontos-secrets/notify.log 2>&1
+//   /usr/local/bin/php /home/sfpo/public_html/pontos.sfpo.pt/notifier-php/notify.php >> /home/sfpo/pontos-secrets/notify.log 2>&1
 // Opções: --log-only (escreve as mensagens em vez de as enviar). Para testes: FIRESTORE_EMULATOR_HOST,
 // GCLOUD_PROJECT e NOTIFY_NOW (ISO 8601).
 

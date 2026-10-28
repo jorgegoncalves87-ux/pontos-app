@@ -7,7 +7,7 @@ self.addEventListener("push", (event) => {
   try { msg = event.data ? event.data.json() : {}; } catch { msg = { data: { body: event.data ? event.data.text() : "" } }; }
   const d = msg.data || {}, n = msg.notification || {};
   // No iPhone, cada push tem de mostrar uma notificação, senão o sistema corta a autorização.
-  event.waitUntil(self.registration.showNotification(d.title || n.title || "Pontos da Família", {
+  event.waitUntil(self.registration.showNotification(d.title || n.title || "SAS Kids", {
     body: d.body || n.body || "",
     icon: "icons/icon-192.png",
     badge: "icons/icon-192.png",

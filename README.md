@@ -1,4 +1,4 @@
-# Pontos da Família — versão produto
+# SAS Kids — versão produto
 
 Cópia da app de pontos para vender a várias famílias. Uma só instalação: cada família cria a sua conta
 ("Criar conta da família") e os dados de cada família ficam separados pelas regras em `firestore.rules`.
@@ -18,7 +18,7 @@ Cópia da app de pontos para vender a várias famílias. Uma só instalação: c
 `notifier-php/notify.php` envia as notificações (validações, prémios, missões, lembrete das 19:45). É publicado
 com a app mas está bloqueado ao público (`.htaccess` e só corre na linha de comandos) e corre num Cron Job do cPanel:
 
-    */5 * * * *  /usr/local/bin/php /home/sfpo/pontos.sfpo.pt/notifier-php/notify.php >> /home/sfpo/pontos-secrets/notify.log 2>&1
+    */5 * * * *  /usr/local/bin/php /home/sfpo/public_html/pontos.sfpo.pt/notifier-php/notify.php >> /home/sfpo/pontos-secrets/notify.log 2>&1
 
 A chave da conta de serviço do Firebase fica em `/home/sfpo/pontos-secrets/service-account.json` (fora da pasta
 pública, permissões 600) — nunca no repositório. `notifier/notify.mjs` é a versão Node equivalente (testes).

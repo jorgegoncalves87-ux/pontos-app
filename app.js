@@ -10,6 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
+import { landingHTML } from "./landing.js?v=2026-10-28.3";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -309,6 +310,7 @@ const bellButton = (who) => `<button class="link" id="bell" title="Notificaçõe
 
 // ---------- Render principal ----------
 function render() {
+  app.classList.remove("landing");
   if (!(S.user && S.familyId && S.fam && S.role && (S.role === "parent" || kidById(S.role)))) {
     app.classList.remove("shell");
     delete app.dataset.view;
@@ -335,48 +337,57 @@ function renderNotLinked() {
     ? "Este aparelho foi desligado pelo pai/mãe."
     : S.linkError === "invalid" ? "Este link de ligação já não é válido." : "Este aparelho ainda não está ligado à família.";
   app.innerHTML = `<div class="card" style="max-width:420px;margin:40px auto 0;text-align:center">
-    <h1>⭐ Pontos da Família</h1><p>${msg}</p>
+    <h1>⭐ SAS Kids</h1><p>${msg}</p>
     <p class="muted">Pede ao pai/mãe um link novo: na app, ⚙️ Definições → <b>Ligar aparelho de um filho</b>.</p>
     <button class="link" id="toLogin">Sou o pai/mãe: entrar com email</button></div>`;
   document.getElementById("toLogin").onclick = () => { forgetJoinLink(); signOut(auth); };
 }
 
 function renderNotConfigured() {
-  app.innerHTML = `<div class="card"><h1>⭐ Pontos da Família</h1>
+  app.innerHTML = `<div class="card"><h1>⭐ SAS Kids</h1>
     <p>Falta ligar a app ao Firebase. Edita o ficheiro <b>firebase-config.js</b> com a configuração do teu projeto — os passos estão no README.</p></div>`;
 }
 
 function renderLogin() {
-  app.innerHTML = `<div style="max-width:420px;margin:40px auto 0">
-    <h1 style="text-align:center">⭐ Pontos da Família</h1>
-    <p class="muted" style="text-align:center">Pai/mãe: entra com a conta da família.<br>Filhos: abram o link que o pai/mãe vos enviou — não precisam de email.</p>
-    <form class="card" id="loginForm">
-      <label>Email</label><input name="email" type="email" autocomplete="username" required>
-      <label>Password</label><input name="password" type="password" autocomplete="current-password" required minlength="6">
-      <div class="err" id="loginErr"></div>
-      <button class="primary block" type="submit" data-mode="login">Entrar</button>
-      <button class="block" type="submit" data-mode="register" style="margin-top:8px">Criar conta da família</button>
-      <button class="link" type="button" id="forgot" style="margin-top:8px">Esqueci-me da password</button>
-    </form></div>`;
-  const form = document.getElementById("loginForm");
-  const err = document.getElementById("loginErr");
-  form.onsubmit = async (ev) => {
-    ev.preventDefault();
-    const mode = ev.submitter?.dataset.mode || "login";
-    const email = form.email.value.trim(), pw = form.password.value;
-    err.textContent = "";
-    try {
-      if (mode === "register") await createUserWithEmailAndPassword(auth, email, pw);
-      else await signInWithEmailAndPassword(auth, email, pw);
-    } catch (e) {
-      err.textContent = authError(e.code);
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  app.classList.add("landing");
+  app.innerHTML = landingHTML(standalone);
+  const card = document.getElementById("authCard");
+  const showAuth = (mode, scroll) => {
+    card.querySelectorAll("[data-auth]").forEach((b) => b.classList.toggle("active", b.dataset.auth === mode));
+    document.getElementById("loginForm").classList.toggle("hidden", mode !== "login");
+    document.getElementById("registerForm").classList.toggle("hidden", mode !== "register");
+    if (scroll) {
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => card.querySelector(`#${mode}Form input`)?.focus({ preventScroll: true }), 400);
     }
   };
+  card.querySelectorAll("[data-auth]").forEach((b) => (b.onclick = () => showAuth(b.dataset.auth)));
+  app.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => showAuth(b.dataset.go, true)));
+
+  const login = document.getElementById("loginForm");
+  const loginErr = document.getElementById("loginErr");
+  login.onsubmit = async (ev) => {
+    ev.preventDefault();
+    loginErr.textContent = "";
+    try { await signInWithEmailAndPassword(auth, login.email.value.trim(), login.password.value); }
+    catch (e) { loginErr.textContent = authError(e.code); }
+  };
   document.getElementById("forgot").onclick = async () => {
-    const email = form.email.value.trim();
-    if (!email) { err.textContent = "Escreve primeiro o email."; return; }
+    const email = login.email.value.trim();
+    if (!email) { loginErr.textContent = "Escreve primeiro o email."; return; }
     try { await sendPasswordResetEmail(auth, email); toast("Enviámos um email para recuperares a password."); }
-    catch (e) { err.textContent = authError(e.code); }
+    catch (e) { loginErr.textContent = authError(e.code); }
+  };
+
+  const reg = document.getElementById("registerForm");
+  const regErr = document.getElementById("registerErr");
+  reg.onsubmit = async (ev) => {
+    ev.preventDefault();
+    regErr.textContent = "";
+    if (reg.password.value !== reg.password2.value) { regErr.textContent = "As passwords não coincidem."; return; }
+    try { await createUserWithEmailAndPassword(auth, reg.email.value.trim(), reg.password.value); }
+    catch (e) { regErr.textContent = authError(e.code); }
   };
 }
 
@@ -1156,7 +1167,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.2";
+const APP_VERSION = "2026-10-28.3";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1503,7 +1514,7 @@ async function openLinkDevice() {
     catch { const box = modal.querySelector("#linkBox"); box.select(); toast("Seleciona e copia o link."); }
   };
   const share = modal.querySelector("#shareLink");
-  if (share) share.onclick = () => navigator.share({ title: "Pontos da Família", text: "Abre este link para entrar na app:", url: link }).catch(() => {});
+  if (share) share.onclick = () => navigator.share({ title: "SAS Kids", text: "Abre este link para entrar na app:", url: link }).catch(() => {});
 }
 
 /** Saldos a 0 e histórico apagado; filhos, tarefas e prémios mantêm-se. Devolve quantos registos apagou. */
