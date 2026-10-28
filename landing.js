@@ -37,13 +37,48 @@ const GALLERY = [
   ["premio.svg", "E depois… o prémio!", "Duas crianças felizes com gelados e balões"],
 ];
 
+const INSTALL = {
+  ios: { name: "iPhone / iPad", browser: "Safari", steps: [
+    ["ios-1.svg", "Abre o Safari", "Escreve <b>saskids.net</b> na barra de endereço e abre a página."],
+    ["ios-2.svg", "Toca em Partilhar", "É o quadrado com uma seta para cima, em baixo no ecrã. Se não o vires, toca primeiro em <b>⋯</b>."],
+    ["ios-3.svg", "Adicionar ao ecrã principal", "Desliza a lista para baixo e toca em <b>Adicionar ao ecrã principal</b>."],
+    ["ios-4.svg", "Toca em Adicionar", "No canto superior direito. O nome SAS Kids já vem escrito."],
+    ["ios-5.svg", "Pronto!", "A SAS Kids aparece no ecrã principal, com a mascote. Abre sempre por aqui."],
+  ] },
+  android: { name: "Android", browser: "Chrome", steps: [
+    ["and-1.svg", "Abre o Chrome", "Escreve <b>saskids.net</b> na barra de endereço e abre a página."],
+    ["and-2.svg", "Toca nos três pontos", "O botão <b>⋮</b> fica no canto superior direito."],
+    ["and-3.svg", "Adicionar ao ecrã principal", "Toca em <b>Adicionar ao ecrã principal</b> (em alguns telemóveis diz <b>Instalar app</b>)."],
+    ["and-4.svg", "Toca em Instalar", "Confirma. Em poucos segundos a app fica instalada."],
+    ["and-5.svg", "Pronto!", "A SAS Kids aparece no ecrã principal e na lista de apps."],
+  ] },
+};
+
+function installSection() {
+  const tab = (k) => `<button type="button" role="tab" data-os="${k}">${k === "ios" ? "🍎" : "🤖"} ${INSTALL[k].name}</button>`;
+  const steps = (k) => `<ol class="inst-steps" data-steps="${k}">${INSTALL[k].steps.map(([img, t, d], i) =>
+    `<li><img src="${IMG}instalar/${img}" alt="" class="inst-img"><span class="num">${i + 1}</span><h3>${t}</h3><p>${d}</p></li>`).join("")}</ol>`;
+  return `<section class="lp-section lp-install" id="instalar">
+    <h2>Instala a app no telemóvel</h2>
+    <p class="sub">Em 30 segundos a SAS Kids fica no ecrã principal, com ícone, como qualquer outra app. Não ocupa espaço e atualiza sozinha.</p>
+    <div class="inst-quick hidden" id="installNow"><button class="cta" id="installBtn">📲 Instalar agora</button><span>Um toque e está feito.</span></div>
+    <div class="auth-tabs inst-tabs" role="tablist">${tab("ios")}${tab("android")}</div>
+    ${steps("ios")}${steps("android")}
+    <div class="inst-tips">
+      <div class="tile c1"><div class="ic">👧</div><h3>No telemóvel ou tablet dos filhos</h3><p>Abre primeiro o <b>link que recebeste na app</b> (⚙️ Definições → Ligar aparelho de um filho) e só depois faz estes passos. Assim a app já abre ligada à família.</p></div>
+      <div class="tile c2"><div class="ic">🔔</div><h3>Notificações no iPhone</h3><p>No iPhone, as notificações só funcionam com a app adicionada ao ecrã principal. Depois de instalar, abre-a pelo ícone e toca no sino.</p></div>
+      <div class="tile c4"><div class="ic">💻</div><h3>No computador</h3><p>No Chrome ou no Edge, carrega no ícone de instalar ao lado do endereço. Ou usa simplesmente o site.</p></div>
+    </div>
+  </section>`;
+}
+
 const FAQ = [
   ["Os filhos precisam de email ou telemóvel?", "Não. Os pais enviam um link para o aparelho de cada filho (tablet, telemóvel ou computador) e eles entram só com o PIN."],
   ["Para que idades é?", "Funciona melhor entre os 4 e os 14 anos. Os mais novos com tarefas simples e ajuda para ler; os mais velhos gerem tudo sozinhos."],
   ["E se o meu filho marcar uma tarefa que não fez?", "Nada conta sem a validação dos pais. Podes aprovar, rejeitar e até corrigir mais tarde no histórico."],
   ["Posso usar em vários aparelhos?", "Sim. Os pais entram com o email em qualquer aparelho e cada filho no seu, tudo sincronizado."],
   ["Os pontos podem ficar negativos?", "Não. As penalizações ficam no histórico, mas o saldo nunca desce abaixo de zero."],
-  ["Preciso de instalar alguma coisa?", "Não. Abre no navegador e, se quiseres, adiciona ao ecrã principal para ficar com ícone, como uma app."],
+  ["Preciso de instalar alguma coisa?", "Não é preciso ir à loja de apps. Abre no navegador e adiciona ao ecrã principal para ficar com ícone, como uma app. Vê os passos em <a href=\"#instalar\">Instalar app</a>."],
 ];
 
 function authCard() {
@@ -82,6 +117,7 @@ export function landingHTML(standalone) {
   <header class="lp-nav">
     <a class="logo" href="#topo"><img src="${IMG}logo-icon.svg" alt="" class="logo-ic"><img src="${IMG}logo-texto.svg" alt="SAS Kids" class="logo-txt"></a>
     <nav><a href="#como">Como funciona</a><a href="#beneficios">Benefícios</a><a href="#perguntas">Perguntas</a></nav>
+    <a class="ghost small install-link" href="#instalar">📲 Instalar<span class="hide-sm"> app</span></a>
     <button class="cta small" data-go="login">Entrar</button>
   </header>
 
@@ -132,6 +168,8 @@ export function landingHTML(standalone) {
       <p>Mais meia hora de tablet, escolher o jantar de sexta, um passeio ao parque ou aquele brinquedo que andam a namorar. Quando o prémio vem do esforço, sabe muito melhor, e os filhos aprendem que as coisas boas da vida se constroem um dia de cada vez.</p>
     </div>
   </section>
+
+  ${installSection()}
 
   <section class="lp-section" id="perguntas">
     <h2>Perguntas frequentes</h2>

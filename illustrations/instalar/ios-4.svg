@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 460" role="img" aria-label="Botão Adicionar no canto superior direito"><title>Botão Adicionar no canto superior direito</title><rect x="6" y="6" width="228" height="448" rx="36" fill="#2f3657"/><rect x="16" y="16" width="208" height="428" rx="28" fill="#fffdf8"/><rect x="90" y="24" width="60" height="16" rx="8" fill="#2f3657"/><clipPath id="sc"><rect x="16" y="16" width="208" height="428" rx="28"/></clipPath><g clip-path="url(#sc)"><rect x="16" y="16" width="208" height="428" fill="#000" opacity=".25"/><rect x="16" y="50" width="208" height="394" rx="22" fill="#f3f2f8"/><text x="34" y="80" font-family="Inter,system-ui,sans-serif" font-size="12" fill="#1fa5a8">Cancelar</text><text x="206" y="80" text-anchor="end" font-family="Inter,system-ui,sans-serif" font-size="12" font-weight="800" fill="#1fa5a8">Adicionar</text><rect x="142" y="60" width="72" height="28" rx="12" fill="none" stroke="#ff7f6e" stroke-width="3.5"/><rect x="137" y="55" width="82" height="38" rx="17" fill="none" stroke="#ff7f6e" stroke-width="5" opacity=".2"/><rect x="28" y="100" width="184" height="70" rx="14" fill="#fff"/><g transform="translate(40 112) scale(0.08984375)"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9f0e6"/><stop offset="1" stop-color="#cfe6ff"/></linearGradient></defs>
+<rect width="512" height="512" rx="116" fill="url(#bg)"/>
+<circle cx="420" cy="96" r="34" fill="#fff" opacity=".55"/><circle cx="84" cy="420" r="46" fill="#fff" opacity=".45"/>
+<polygon points="96.0,78.0 88.8,94.1 71.3,96.0 84.4,107.8 80.7,125.0 96.0,116.2 111.3,125.0 107.6,107.8 120.7,96.0 103.2,94.1" fill="#ffd25e" stroke="#f2b84b" stroke-width="2" stroke-linejoin="round"/><polygon points="430.0,382.0 425.0,393.2 412.9,394.4 422.0,402.6 419.4,414.6 430.0,408.5 440.6,414.6 438.0,402.6 447.1,394.4 435.0,393.2" fill="#ffc2d4" stroke="#ff9fb2" stroke-width="2" stroke-linejoin="round"/>
+<g transform="translate(256 262) scale(2.15) translate(-160 -112)"><g transform="translate(0 0)">
+  <circle cx="86" cy="130" r="13" fill="#ffd3b4"/><circle cx="214" cy="130" r="13" fill="#ffd3b4"/>
+  <path d="M92 118 Q86 150 104 170 L196 170 Q214 150 208 118 Z" fill="#7a4a33"/>
+  <circle cx="150" cy="124" r="60" fill="#ffd3b4"/>
+  <path d="M96 128 Q100 108 118 104 Q112 118 122 122 Q132 106 150 104 Q146 118 160 120 Q172 104 192 108 Q206 116 204 128 Q206 96 180 80 L120 80 Q94 96 96 128 Z" fill="#7a4a33"/>
+  <path d="M88 108 Q90 46 150 44 Q210 46 212 108 Q150 92 88 108 Z" fill="#1fa5a8"/>
+  <path d="M146 100 Q214 88 250 104 Q248 120 226 118 Q186 110 146 114 Z" fill="#13878a"/>
+  <circle cx="150" cy="44" r="9" fill="#13878a"/>
+  <polygon points="146.0,57.0 141.3,67.5 129.8,68.7 138.4,76.5 136.0,87.8 146.0,82.0 156.0,87.8 153.6,76.5 162.2,68.7 150.7,67.5" fill="#ffd25e" stroke="#f2b84b" stroke-width="2" stroke-linejoin="round"/>
+  <ellipse cx="127" cy="132" rx="8" ry="10" fill="#2f3657"/><ellipse cx="173" cy="132" rx="8" ry="10" fill="#2f3657"/>
+  <circle cx="130" cy="128" r="3" fill="#fff"/><circle cx="176" cy="128" r="3" fill="#fff"/>
+  <path d="M116 116 Q127 110 137 115" stroke="#7a4a33" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M163 115 Q173 110 184 116" stroke="#7a4a33" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="110" cy="150" rx="10" ry="7" fill="#ff9fb2" opacity=".6"/><ellipse cx="190" cy="150" rx="10" ry="7" fill="#ff9fb2" opacity=".6"/>
+  <path d="M130 152 Q150 182 170 152 Q150 158 130 152 Z" fill="#2f3657"/>
+  <path d="M140 164 Q150 172 160 164 Q156 160 150 161 Q144 160 140 164 Z" fill="#ff8fa3"/>
+</g></g></g><text x="98" y="132" font-family="Inter,system-ui,sans-serif" font-size="13" font-weight="700" fill="#2f3657">SAS Kids</text><text x="98" y="150" font-family="Inter,system-ui,sans-serif" font-size="10" fill="#9aa0bb">saskids.net</text></g></svg>

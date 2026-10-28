@@ -449,3 +449,47 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--t
 @media (prefers-reduced-motion: reduce) {
   .dance .m-all, .dance .m-head, .dance g, .dance-stars i { animation: none; }
 }
+
+/* Instalar a app */
+.landing section[id] { scroll-margin-top: 76px; }
+.landing .ghost.small { padding: 8px 14px; font-size: .92rem; text-decoration: none; border-width: 2px; }
+.lp-nav .install-link { margin-left: 0; white-space: nowrap; }
+.lp-nav nav + .install-link { margin-left: 4px; }
+.lp-install { background: var(--l-sky); max-width: none; border-radius: 48px; margin: 64px 12px 0; padding-bottom: 48px; }
+.lp-install > * { max-width: 1120px; margin-left: auto; margin-right: auto; }
+.inst-tabs { max-width: 420px; margin: 0 auto 26px; background: #fff; }
+.inst-tabs button.active { background: var(--l-teal); color: #fff; }
+.inst-quick { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 22px; color: var(--l-muted); font-weight: 600; flex-wrap: wrap; }
+.inst-quick.hidden { display: none; }
+.inst-steps { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+.inst-steps.hidden { display: none; }
+.inst-steps li { background: #fff; border-radius: 24px; padding: 14px 14px 18px; position: relative; box-shadow: 0 6px 18px rgba(47, 54, 87, .07); }
+.inst-steps .inst-img { width: 100%; max-width: 200px; display: block; margin: 0 auto 10px; }
+.inst-steps .num { position: absolute; top: 10px; left: 10px; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--l-teal); color: #fff; font-weight: 800; box-shadow: 0 4px 10px rgba(31, 165, 168, .3); }
+.inst-steps h3 { font-size: 1.05rem; margin: 4px 0 4px; }
+.inst-steps p { margin: 0; color: var(--l-muted); font-size: .95rem; }
+.inst-tips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+.inst-tips .tile { background: #fff; }
+.inst-tips .tile p { color: var(--l-muted); margin: 0; }
+@media (max-width: 960px) { .inst-steps { grid-template-columns: repeat(3, 1fr); } .inst-tips { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .lp-install { margin: 48px 0 0; border-radius: 32px; }
+  .lp-nav { gap: 8px; }
+  .lp-nav .install-link { margin-left: auto; }
+  .lp-nav .cta { margin-left: 0; }
+  .landing .logo-txt { height: 22px; }
+}
+@media (max-width: 560px) {
+  .inst-steps { grid-template-columns: 1fr; }
+  .inst-steps li { display: grid; grid-template-columns: 120px 1fr; gap: 6px 14px; align-items: center; text-align: left; }
+  .inst-steps .inst-img { grid-row: span 2; margin: 0; }
+  .inst-steps h3, .inst-steps p { grid-column: 2; }
+}
+@media (max-width: 380px) { .lp-nav .logo-txt { display: none; } }
+@media (max-width: 440px) {
+  .hide-sm { display: none; }
+  .lp-nav { padding-left: 12px; padding-right: 12px; }
+  .landing .ghost.small, .landing .cta.small { padding: 8px 12px; }
+}
+@media (max-width: 560px) { .inst-steps h3 { align-self: end; } .inst-steps p { align-self: start; } }

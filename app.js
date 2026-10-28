@@ -11,7 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { landingHTML } from "./landing.js?v=2026-10-28.5";
+import { landingHTML } from "./landing.js?v=2026-10-28.6";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -67,6 +67,14 @@ function forgetJoinLink() {
 }
 const newToken = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const app = document.getElementById("app");
+
+// Android/Chrome: guardamos o pedido de instalação para o botão "Instalar agora".
+let installPrompt = null;
+addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installPrompt = e; showInstallNow(); });
+addEventListener("appinstalled", () => { installPrompt = null; showInstallNow(); });
+// O Chrome só propõe instalar se houver service worker; é o mesmo das notificações.
+if ("serviceWorker" in navigator && !useEmulator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+function showInstallNow() { document.getElementById("installNow")?.classList.toggle("hidden", !installPrompt); }
 
 // ---------- Utilitários ----------
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -365,6 +373,16 @@ function renderLogin() {
   };
   card.querySelectorAll("[data-auth]").forEach((b) => (b.onclick = () => showAuth(b.dataset.auth)));
   app.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => showAuth(b.dataset.go, true)));
+  // Instalar: mostra logo os passos do sistema deste telemóvel.
+  const showOs = (os) => {
+    app.querySelectorAll("[data-os]").forEach((b) => b.classList.toggle("active", b.dataset.os === os));
+    app.querySelectorAll("[data-steps]").forEach((l) => l.classList.toggle("hidden", l.dataset.steps !== os));
+  };
+  app.querySelectorAll("[data-os]").forEach((b) => (b.onclick = () => showOs(b.dataset.os)));
+  if (app.querySelector("[data-os]")) showOs(isIOS() ? "ios" : "android");
+  showInstallNow();
+  const ib = document.getElementById("installBtn");
+  if (ib) ib.onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); await installPrompt.userChoice.catch(() => {}); installPrompt = null; showInstallNow(); };
 
   const login = document.getElementById("loginForm");
   const loginErr = document.getElementById("loginErr");
@@ -1186,7 +1204,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.5";
+const APP_VERSION = "2026-10-28.6";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
