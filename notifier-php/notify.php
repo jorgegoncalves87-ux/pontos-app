@@ -50,7 +50,7 @@ function accessToken(array $sa): string {
     $head = b64url(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
     $claims = b64url(json_encode([
         'iss' => $sa['client_email'],
-        'scope' => 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging',
+        'scope' => 'https://www.googleapis.com/auth/datastore https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/identitytoolkit',
         'aud' => $sa['token_uri'], 'iat' => $now, 'exp' => $now + 3600,
     ]));
     openssl_sign("$head.$claims", $sig, $sa['private_key'], 'sha256WithRSAEncryption');
@@ -147,6 +147,52 @@ function countDocs(string $parent, string $coll, ?array $where = null): int {
     return (int)($r['body'][0]['result']['aggregateFields']['n']['integerValue'] ?? 0);
 }
 
+/** Registos do histórico por dia (hora de Lisboa) nos últimos $days dias: ['2026-10-28' => 5, ...]. */
+function logByDay(string $parent, int $days = 400): array {
+    global $BASE, $NOW;
+    $since = $NOW->modify("-$days days")->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
+    $r = http('POST', "$BASE/$parent:runQuery", ['structuredQuery' => [
+        'from' => [['collectionId' => 'log']], 'select' => ['fields' => [['fieldPath' => 'createdAt']]],
+        'where' => ['fieldFilter' => ['field' => ['fieldPath' => 'createdAt'], 'op' => 'GREATER_THAN_OR_EQUAL', 'value' => ['timestampValue' => $since]]],
+    ]]);
+    if ($r['code'] >= 400) throw new RuntimeException('Erro a ler o histórico: ' . json_encode($r['body']));
+    $out = [];
+    foreach ($r['body'] as $row) {
+        $c = $row['document']['fields']['createdAt']['timestampValue'] ?? null;
+        if (!$c) continue;
+        $d = (new DateTimeImmutable($c))->setTimezone(new DateTimeZone(TZ))->format('Y-m-d');
+        $out[$d] = ($out[$d] ?? 0) + 1;
+    }
+    ksort($out);
+    return $out;
+}
+
+/**
+ * Contas do Firebase Authentication, só contadas (sem guardar emails): pais com email, quantos têm a
+ * família configurada e aparelhos de filhos (contas anónimas).
+ */
+function accountStats(array $familyIds): ?array {
+    global $PROJECT, $emulator;
+    $url = $emulator ? "http://" . (getenv('FIREBASE_AUTH_EMULATOR_HOST') ?: '127.0.0.1:9099') . "/identitytoolkit.googleapis.com/v1/projects/$PROJECT/accounts:query"
+                     : "https://identitytoolkit.googleapis.com/v1/projects/$PROJECT/accounts:query";
+    $ids = array_flip($familyIds);
+    $out = ['email' => 0, 'withFamily' => 0, 'withoutFamily' => 0, 'anonymous' => 0];
+    $offset = 0;
+    do {
+        // O emulador não aceita paginação; o Firebase devolve no máximo 500 contas por pedido.
+        $r = http('POST', $url, $emulator ? ['returnUserInfo' => true] : ['returnUserInfo' => true, 'limit' => '500', 'offset' => (string)$offset]);
+        if ($r['code'] >= 400) { fwrite(STDERR, 'Contas: ' . json_encode($r['body']) . "\n"); return null; }
+        $users = $r['body']['userInfo'] ?? [];
+        foreach ($users as $u) {
+            if (empty($u['email'])) { $out['anonymous']++; continue; }
+            $out['email']++;
+            isset($ids[$u['localId']]) ? $out['withFamily']++ : $out['withoutFamily']++;
+        }
+        $offset += count($users);
+    } while (!$emulator && count($users) === 500);
+    return $out;
+}
+
 /** Data do registo mais recente do histórico (ou null). */
 function lastActivity(string $parent): ?string {
     global $BASE;
@@ -170,21 +216,21 @@ function familyStats(array $fam): array {
     $tasks = array_filter(listDocs("$path/tasks"), fn($t) => ($t['active'] ?? true) !== false);
     $rewards = array_filter(listDocs("$path/rewards"), fn($r) => ($r['status'] ?? '') === 'active');
     $tokens = listDocs("$path/pushTokens");
-    $ts = fn($days) => ['timestampValue' => $NOW->modify("-$days days")->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z')];
+    $day = fn($iso) => $iso ? (new DateTimeImmutable($iso))->setTimezone(new DateTimeZone(TZ))->format('Y-m-d') : null;
     return [
         'id' => substr(hash('sha256', $fam['_id']), 0, 8),
         'createdAt' => $fam['createdAt'] ?? null,
         'lang' => $fam['lang'] ?? 'pt',
         'tz' => $fam['tz'] ?? null,
         'kidAges' => array_values(array_map(fn($k) => isset($k['birthYear']) ? $year - (int)$k['birthYear'] : null, $kids)),
+        'kidCreated' => array_values(array_map(fn($k) => $day($k['createdAt'] ?? null), $kids)),
         'tasks' => count(array_filter($tasks, fn($t) => empty($t['special']))),
         'missions' => count(array_filter($tasks, fn($t) => !empty($t['special']))),
         'rewards' => count($rewards),
         'kidDevices' => countDocs($path, 'members'),
         'pushParent' => (bool)array_filter($tokens, fn($t) => ($t['parent'] ?? false) === true),
         'pushKids' => count(array_unique(array_merge(...array_map(fn($t) => $t['kids'] ?? [], $tokens ?: [[]])))),
-        'log7' => countDocs($path, 'log', ['createdAt', 'GREATER_THAN_OR_EQUAL', $ts(7)]),
-        'log30' => countDocs($path, 'log', ['createdAt', 'GREATER_THAN_OR_EQUAL', $ts(30)]),
+        'logByDay' => logByDay($path),
         'logTotal' => countDocs($path, 'log'),
         'lastActivity' => lastActivity($path),
     ];
@@ -361,7 +407,9 @@ if ($STATS_FILE && (getenv('FORCE_STATS') || !is_file($STATS_FILE) || filemtime(
         try { $rows[] = familyStats($fam); } catch (Throwable $e) { fwrite(STDERR, "[{$fam['_id']}] estatísticas: " . $e->getMessage() . "\n"); }
     }
     $tmp = "$STATS_FILE.tmp";
-    file_put_contents($tmp, json_encode(['generatedAt' => $NOW->format(DATE_ATOM), 'families' => $rows], JSON_UNESCAPED_UNICODE));
+    $accounts = null;
+    try { $accounts = accountStats(array_map(fn($f) => $f['_id'], $families)); } catch (Throwable $e) { fwrite(STDERR, 'Contas: ' . $e->getMessage() . "\n"); }
+    file_put_contents($tmp, json_encode(['generatedAt' => $NOW->format(DATE_ATOM), 'families' => $rows, 'accounts' => $accounts], JSON_UNESCAPED_UNICODE));
     @chmod($tmp, 0600);
     rename($tmp, $STATS_FILE);
     echo 'Estatísticas: ' . count($rows) . " família(s).\n";
