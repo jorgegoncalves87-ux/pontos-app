@@ -15,9 +15,13 @@ Cópia da app de pontos para vender a várias famílias. Uma só instalação: c
 4. Configuração da app web em `firebase-config.js`; chave Web Push em `vapidKey`.
 
 ## Notificações
-`notifier/notify.mjs` envia as notificações (validações, prémios, missões, lembrete das 19:45).
-Em produção vai correr como tarefa agendada no alojamento; o workflow `notify.yml` só serve para testes manuais.
-Precisa da chave da conta de serviço do Firebase (segredo `FIREBASE_SERVICE_ACCOUNT`) — nunca no repositório.
+`notifier-php/notify.php` envia as notificações (validações, prémios, missões, lembrete das 19:45). É publicado
+com a app mas está bloqueado ao público (`.htaccess` e só corre na linha de comandos) e corre num Cron Job do cPanel:
+
+    */5 * * * *  /usr/local/bin/php /home/sfpo/pontos.sfpo.pt/notifier-php/notify.php >> /home/sfpo/pontos-secrets/notify.log 2>&1
+
+A chave da conta de serviço do Firebase fica em `/home/sfpo/pontos-secrets/service-account.json` (fora da pasta
+pública, permissões 600) — nunca no repositório. `notifier/notify.mjs` é a versão Node equivalente (testes).
 
 ## Por fazer antes de vender
 - Política de privacidade e termos; consentimento dos pais (RGPD, dados e fotos de crianças).
