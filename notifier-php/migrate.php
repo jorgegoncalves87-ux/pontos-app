@@ -138,6 +138,11 @@ try {
     foreach ($subs['kids'] as $kf) echo "  · " . ($kf['name']['stringValue'] ?? '?') . ': ' . ($kf['points']['integerValue'] ?? 0) . " pontos\n";
 
     $existing = getRaw($to, $dstPath);
+    // Só uma vez: se a tarefa agendada ficar ligada, não volta a apagar e copiar por cima do que entretanto se fez.
+    if (($existing['migratedFrom']['stringValue'] ?? '') === $from['project']) {
+        echo "\nEsta conta já recebeu a família antiga (migração feita). Nada a fazer: podes apagar a tarefa agendada.\n";
+        exit(0);
+    }
     $existingSubs = [];
     foreach (['kids', 'tasks', 'rewards', 'log', 'members', 'pushTokens'] as $coll) $existingSubs[$coll] = listRaw($to, "$dstPath/$coll");
     $hasData = $existing !== null || array_sum(array_map('count', $existingSubs)) > 0;
