@@ -5,15 +5,15 @@ import {
   EmailAuthProvider, reauthenticateWithCredential, deleteUser, sendEmailVerification,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, collection, onSnapshot, writeBatch,
   arrayUnion, arrayRemove,
   query, orderBy, limit, runTransaction, serverTimestamp, connectFirestoreEmulator,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+// As notificações (firebase-messaging) só são carregadas quando alguém as liga.
+const messaging = () => import("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js");
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.17";
-import { landingHTML } from "./landing.js?v=2026-10-28.17";
-import { SCENES, sceneSvg } from "./scenes.js?v=2026-10-28.17";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.18";
+import { landingHTML } from "./landing.js?v=2026-10-28.18";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -25,7 +25,8 @@ let auth, db, fbApp;
 if (configured) {
   fbApp = initializeApp(config);
   auth = getAuth(fbApp);
-  db = getFirestore(fbApp);
+  // Os dados ficam guardados no aparelho: ao abrir a app aparecem logo e atualizam-se a seguir.
+  db = initializeFirestore(fbApp, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
   if (useEmulator) {
     connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
     connectFirestoreEmulator(db, "127.0.0.1", 8080);
@@ -193,6 +194,8 @@ function startListeners() {
     toast(tr("Erro a ler dados: {code}", { code: e.code }));
   };
   S.unsub.push(onSnapshot(famDoc(), (snap) => {
+    // Sem cópia no aparelho, espera pela resposta do servidor (senão parecia uma família por criar).
+    if (!snap.exists() && snap.metadata.fromCache) return;
     S.fam = snap.exists() ? snap.data() : null;
     // A língua escolhida pelos pais vale para todos os aparelhos da família.
     if (S.fam?.lang && LANGS[S.fam.lang] && S.fam.lang !== LANG && setLang(S.fam.lang)) return location.reload();
@@ -318,7 +321,8 @@ async function pushToken(permRequest) {
   const fail = (code, msg) => Object.assign(new Error(msg), { pushHelp: code });
   // No iPhone/iPad só há notificações na app adicionada ao ecrã principal e aberta pelo ícone.
   if (isIOS() && !isStandalone()) throw fail("ios-install", tr("No iPhone, primeiro adiciona a app ao ecrã principal (Partilhar → Adicionar ao ecrã principal) e abre-a a partir do ícone."));
-  if (!(await messagingSupported().catch(() => false)) || !("serviceWorker" in navigator)) {
+  const { getMessaging, getToken, isSupported } = await messaging();
+  if (!(await isSupported().catch(() => false)) || !("serviceWorker" in navigator)) {
     throw fail("unsupported", tr("Este navegador não suporta notificações."));
   }
   const perm = await (permRequest ?? Notification.requestPermission());
@@ -670,19 +674,22 @@ function welcomeCard() {
 // ---------- Mascote ----------
 // A mascote vem inline (e não num <img>) para os braços e as pernas poderem dançar.
 let mascotSvg = null;
+// As cenas só são carregadas na primeira vez que a mascote aparece.
+let scenesMod = null;
+const loadScenes = () => (scenesMod ??= import("./scenes.js?v=2026-10-28.18").catch(() => null));
 /**
  * Cena da mascote para uma tarefa ou missão: as que vieram das sugestões têm uma animação própria
  * (guardada em task.scene; nas outras reconhece-se pelo título). As restantes usam a dança normal.
  */
 function sceneFor(t) {
   if (!t) return null;
-  if (t.scene && SCENES[t.scene]) return t.scene;
+  if (t.scene) return t.scene;
   const title = (t.title || "").trim().toLowerCase();
   return TASK_IDEAS.find((i) => i[0].toLowerCase() === title)?.[4] || MISSION_IDEAS.find((m) => m[0].toLowerCase() === title)?.[2] || null;
 }
 async function mascotDance(msg, scene = null) {
-  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg?v=2026-10-28.17")).text(); } catch { return toast(msg); }
-  const stage = scene && sceneSvg(scene, mascotSvg);
+  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg?v=2026-10-28.18")).text(); } catch { return toast(msg); }
+  const stage = scene && (await loadScenes())?.sceneSvg(scene, mascotSvg);
   document.querySelector(".dance")?.remove();
   const el = document.createElement("div");
   el.className = "dance";
@@ -1398,7 +1405,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.17";
+const APP_VERSION = "2026-10-28.18";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever

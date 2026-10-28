@@ -12,3 +12,27 @@ RewriteRule ^ https://saskids.net%{REQUEST_URI} [R=301,L]
 <Files ".ftp-deploy-sync-state.json">
   Require all denied
 </Files>
+
+# ---------- Velocidade ----------
+# Comprime o texto (HTML, JS, CSS, JSON, SVG) antes de o enviar: cerca de 4 vezes menos a descarregar.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript text/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+</IfModule>
+# Ficheiros com versão no endereço (?v=...) mudam de endereço a cada publicação:
+# podem ficar guardados no aparelho durante um ano. O resto guarda-se 1 hora,
+# e a página, o service worker e version.json são sempre pedidos de novo. As páginas PHP
+# (backoffice e API) não são tocadas.
+<IfModule mod_headers.c>
+  <If "%{QUERY_STRING} =~ m#(^|&)v=# && %{REQUEST_URI} !~ m#\.php$#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  <ElseIf "%{REQUEST_URI} =~ m#(\.html|/|sw\.js|version\.json|firebase-config\.js)$#">
+    Header set Cache-Control "no-cache"
+  </ElseIf>
+  <ElseIf "%{REQUEST_URI} =~ m#\.(png|svg|webp|jpg|ico|json|js|css|webmanifest)$#">
+    Header set Cache-Control "public, max-age=3600"
+  </ElseIf>
+</IfModule>
