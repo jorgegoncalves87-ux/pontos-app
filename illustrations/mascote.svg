@@ -1,20 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 370" role="img" aria-label="Mascote da SAS Kids: um miúdo de boné a saltar com uma estrela"><title>Mascote SAS Kids</title>
-  <ellipse cx="150" cy="352" rx="70" ry="9" fill="#2f3657" opacity=".08"/>
-  <path d="M134 262 Q128 292 118 318" stroke="#ffd3b4" stroke-width="17" stroke-linecap="round" fill="none"/>
-  <path d="M168 262 Q186 284 210 296" stroke="#ffd3b4" stroke-width="17" stroke-linecap="round" fill="none"/>
-  <path d="M100 322 Q104 308 122 312 Q136 316 134 326 Q132 334 116 334 Q98 334 100 322 Z" fill="#1fa5a8"/>
-  <path d="M206 284 Q222 282 230 296 Q234 308 222 310 Q206 312 204 300 Z" fill="#1fa5a8"/>
-  <path d="M116 200 Q90 170 74 132" stroke="#ff9f8a" stroke-width="19" stroke-linecap="round" fill="none"/>
-  <circle cx="72" cy="126" r="11" fill="#ffd3b4"/>
-  <path d="M184 200 Q214 214 238 196" stroke="#ff9f8a" stroke-width="19" stroke-linecap="round" fill="none"/>
-  <circle cx="242" cy="192" r="11" fill="#ffd3b4"/>
-  <rect x="108" y="176" width="84" height="80" rx="30" fill="#ff9f8a"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 370" role="img" aria-label="Mascote da SAS Kids: um miúdo de boné a saltar com uma estrela"><title>Mascote SAS Kids</title><g class="m-all">
+  <ellipse class="m-shadow" cx="150" cy="352" rx="70" ry="9" fill="#2f3657" opacity=".08"/>
+  <g class="m-leg-l"><path d="M134 262 Q128 292 118 318" stroke="#ffd3b4" stroke-width="17" stroke-linecap="round" fill="none"/>
+  <path d="M100 322 Q104 308 122 312 Q136 316 134 326 Q132 334 116 334 Q98 334 100 322 Z" fill="#1fa5a8"/></g>
+  <g class="m-leg-r"><path d="M168 262 Q186 284 210 296" stroke="#ffd3b4" stroke-width="17" stroke-linecap="round" fill="none"/>
+  <path d="M206 284 Q222 282 230 296 Q234 308 222 310 Q206 312 204 300 Z" fill="#1fa5a8"/></g>
+  <g class="m-arm-l"><path d="M116 200 Q90 170 74 132" stroke="#ff9f8a" stroke-width="19" stroke-linecap="round" fill="none"/>
+  <circle cx="72" cy="126" r="11" fill="#ffd3b4"/><polygon points="66.0,54.0 56.6,75.1 33.7,77.5 50.8,92.9 46.0,115.5 66.0,104.0 86.0,115.5 81.2,92.9 98.3,77.5 75.4,75.1" fill="#ffd25e" stroke="#f2b84b" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M30 70 l6 -6 M24 96 h-8 M44 44 l-4 -8" stroke="#ffd25e" stroke-width="5" stroke-linecap="round"/></g>
+  <g class="m-arm-r"><path d="M184 200 Q214 214 238 196" stroke="#ff9f8a" stroke-width="19" stroke-linecap="round" fill="none"/>
+  <circle cx="242" cy="192" r="11" fill="#ffd3b4"/></g>
+  <g class="m-body"><rect x="108" y="176" width="84" height="80" rx="30" fill="#ff9f8a"/>
   <polygon points="150.0,196.0 145.6,205.9 134.8,207.1 142.8,214.3 140.6,224.9 150.0,219.5 159.4,224.9 157.2,214.3 165.2,207.1 154.4,205.9" fill="#fff3c4" stroke="#ffe08a" stroke-width="1.5" stroke-linejoin="round"/>
-  <path d="M110 238 H190 V256 Q190 270 176 270 H124 Q110 270 110 256 Z" fill="#b9a6f0"/>
-  <polygon points="66.0,54.0 56.6,75.1 33.7,77.5 50.8,92.9 46.0,115.5 66.0,104.0 86.0,115.5 81.2,92.9 98.3,77.5 75.4,75.1" fill="#ffd25e" stroke="#f2b84b" stroke-width="2" stroke-linejoin="round"/>
-  <path d="M30 70 l6 -6 M24 96 h-8 M44 44 l-4 -8" stroke="#ffd25e" stroke-width="5" stroke-linecap="round"/>
-  <path d="M258 150 q8 -4 6 -14 M270 176 q8 2 12 -6" stroke="#1fa5a8" stroke-width="4" stroke-linecap="round" fill="none" opacity=".6"/>
-<g transform="translate(0 -8)">
+  <path d="M110 238 H190 V256 Q190 270 176 270 H124 Q110 270 110 256 Z" fill="#b9a6f0"/></g>
+  <path class="m-spark" d="M258 150 q8 -4 6 -14 M270 176 q8 2 12 -6" stroke="#1fa5a8" stroke-width="4" stroke-linecap="round" fill="none" opacity=".6"/>
+<g class="m-head"><g transform="translate(0 -8)">
   <circle cx="86" cy="130" r="13" fill="#ffd3b4"/><circle cx="214" cy="130" r="13" fill="#ffd3b4"/>
   <path d="M92 118 Q86 150 104 170 L196 170 Q214 150 208 118 Z" fill="#7a4a33"/>
   <circle cx="150" cy="124" r="60" fill="#ffd3b4"/>
@@ -30,4 +29,4 @@
   <ellipse cx="110" cy="150" rx="10" ry="7" fill="#ff9fb2" opacity=".6"/><ellipse cx="190" cy="150" rx="10" ry="7" fill="#ff9fb2" opacity=".6"/>
   <path d="M130 152 Q150 182 170 152 Q150 158 130 152 Z" fill="#2f3657"/>
   <path d="M140 164 Q150 172 160 164 Q156 160 150 161 Q144 160 140 164 Z" fill="#ff8fa3"/>
-</g></svg>
+</g></g></g></svg>

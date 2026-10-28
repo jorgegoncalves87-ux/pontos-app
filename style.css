@@ -1,44 +1,32 @@
 :root {
-  /* Turquesa do ícone (escurecido para o texto branco se ler bem). */
-  --bg: #f2f9f9;
+  /* Tons pastel da SAS Kids (os mesmos do site). A app é sempre clara, como o site. */
+  color-scheme: light;
+  --bg: #fffdf8;
   --card: #ffffff;
-  --text: #14292a;
-  --muted: #5f7071;
-  --border: #d6e9e9;
-  --primary: #0d7c80;
+  --text: #2f3657;
+  --muted: #646b8a;
+  --border: #ece9f5;
+  --primary: #13878a;
   --primary-text: #ffffff;
-  --brand-gradient: linear-gradient(135deg, #128f93, #0a6d72);
-  --good: #1f9d55;
-  --good-bg: #e3f7ec;
+  --teal: #1fa5a8;
+  --coral: #ff7f6e;
+  --mint: #d8f3e8; --sky: #dcefff; --butter: #fff3c4; --pink: #ffe0ea; --lilac: #ebe2fb; --peach: #ffe3d3;
+  --brand-gradient: linear-gradient(135deg, #1fa5a8, #13878a);
+  --good: #1d8a4f;
+  --good-bg: #ddf5e8;
   --bad: #d64545;
-  --bad-bg: #fde8e8;
-  --warn: #b7791f;
-  --warn-bg: #fdf3dc;
-  --radius: 14px;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0e1a1b;
-    --card: #162526;
-    --text: #e6f4f4;
-    --muted: #9db3b4;
-    --border: #24393a;
-    --primary: #3cc4c8;
-    --primary-text: #04292b;
-    --good: #4ade80;
-    --good-bg: #163323;
-    --bad: #f87171;
-    --bad-bg: #3a1a1a;
-    --warn: #fbbf24;
-    --warn-bg: #3a2c0d;
-  }
+  --bad-bg: #ffe4e4;
+  --warn: #a8700f;
+  --warn-bg: #fff3c4;
+  --radius: 20px;
+  --shadow: 0 6px 18px rgba(47, 54, 87, .07);
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 #app { max-width: 720px; margin: 0 auto; padding: 16px 16px 96px; }
@@ -177,8 +165,7 @@ label.inline { display: inline-flex; align-items: center; gap: 6px; font-weight:
 .day.active .dot { background: var(--primary-text); color: var(--primary); }
 
 /* Gráfico semanal */
-:root { --gain: #2b7fd6; --loss: #e8590c; --grid: #e2efef; }
-@media (prefers-color-scheme: dark) { :root { --gain: #4a86e0; --loss: #e0703a; --grid: #24393a; } }
+:root { --gain: #1fa5a8; --loss: #ff7f6e; --grid: #f1eee6; }
 .chart { margin-top: 12px; }
 .chart svg { width: 100%; height: auto; display: block; margin-top: 8px; overflow: visible; }
 .chart .bar-gain { fill: var(--gain); }
@@ -375,3 +362,90 @@ body:has(#app.landing) { background: #fffdf8; }
 .lp-compact .compact-mascot { display: block; width: 150px; margin: 4px auto 0; }
 .lp-compact .compact-logo { display: block; height: 40px; margin: 6px auto 18px; }
 @media (max-width: 760px) { .landing .auth-art.mascot { display: block; max-width: 200px; } }
+
+/* ---------- Aspeto da app (igual ao site) ---------- */
+h1 { font-size: 1.6rem; letter-spacing: -.01em; }
+h2 { font-size: 1.2rem; }
+.card { border: 2px solid #f1eee6; box-shadow: var(--shadow); padding: 16px 18px; margin-bottom: 12px; }
+button, .btn { border: 2px solid var(--border); border-radius: 999px; padding: 9px 16px; font-weight: 600; }
+button.primary { background: var(--teal); border-color: var(--teal); box-shadow: 0 6px 14px rgba(31, 165, 168, .25); }
+button.primary:hover { background: var(--primary); }
+button.block { padding: 13px; }
+button.link { border: none; box-shadow: none; font-weight: 700; color: var(--primary); }
+input, select, textarea { border: 2px solid var(--border); border-radius: 14px; background: #fff; padding: 11px 14px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--teal); }
+
+.brandbar { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 14px; }
+.brandbar .bb-ic { width: 34px; height: 34px; }
+.brandbar .bb-txt { height: 22px; }
+
+.balance {
+  position: relative; overflow: hidden; text-align: left; padding: 20px 22px; min-height: 120px;
+  background: linear-gradient(135deg, var(--mint), var(--sky)); color: var(--text);
+  border-radius: 28px; box-shadow: var(--shadow);
+}
+.balance .big { color: var(--primary); font-size: 2.8rem; }
+.balance > div { position: relative; max-width: 62%; }
+.balance .bal-mascot { position: absolute; right: 6px; bottom: -14px; height: 150px; pointer-events: none; }
+
+.tabs { background: #fff; border-top: 2px solid #f1eee6; padding-top: 8px; box-shadow: 0 -6px 18px rgba(47, 54, 87, .05); }
+.tabs button { border: none; border-radius: 16px; padding: 6px 2px 4px; font-weight: 600; }
+.tabs button .ic { font-size: 1.35rem; padding: 2px 16px; border-radius: 999px; }
+.tabs button.active { color: var(--primary); }
+.tabs button.active .ic { background: var(--mint); }
+.badge { background: var(--coral); }
+
+.task { border: 2px solid #f1eee6; box-shadow: var(--shadow); padding: 15px 16px; border-radius: 20px; }
+.task .check { width: 32px; height: 32px; border-width: 3px; }
+.task.pending { background: #fffbea; }
+.task.approved { background: #f1fbf5; }
+
+.profiles { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+.profile { border: none; border-radius: 24px; padding: 22px 10px; box-shadow: var(--shadow); background: var(--sky); }
+.profile:nth-child(6n+1) { background: var(--mint); } .profile:nth-child(6n+2) { background: var(--pink); }
+.profile:nth-child(6n+3) { background: var(--butter); } .profile:nth-child(6n+4) { background: var(--lilac); }
+.profile:nth-child(6n+5) { background: var(--peach); }
+.who { text-align: center; } .who-mascot { height: 140px; margin-bottom: 4px; }
+
+.modal { background: rgba(47, 54, 87, .4); }
+.modal .sheet { border-radius: 28px 28px 0 0; padding: 22px 18px calc(20px + env(safe-area-inset-bottom)); }
+@media (min-width: 600px) { .modal .sheet { border-radius: 28px; } }
+.toast { background: var(--text); color: #fff; border-radius: 999px; padding: 11px 18px; font-weight: 600; }
+.day { border-width: 2px; }
+.day.active { background: var(--teal); border-color: var(--teal); }
+.pill.pending { background: var(--butter); }
+.special { border-radius: 24px; }
+.special-row { border-left-color: var(--teal); }
+
+/* A mascote dança quando um filho completa uma tarefa */
+.dance { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(255, 253, 248, .82); backdrop-filter: blur(3px); animation: dance-in .25s ease-out; cursor: pointer; }
+.dance.out { opacity: 0; transition: opacity .3s; }
+.dance-mascot { width: min(64vw, 260px); }
+.dance-mascot svg { width: 100%; height: auto; overflow: visible; display: block; }
+.dance-bubble { background: #fff; border: 3px solid var(--mint); border-radius: 22px; padding: 12px 18px; font-weight: 800; font-size: 1.15rem;
+  color: var(--text); max-width: 300px; text-align: center; box-shadow: var(--shadow); margin-bottom: 6px; animation: bubble 2.6s ease-in-out; }
+.dance svg g { transform-box: fill-box; }
+.dance .m-all { transform-origin: 50% 100%; animation: m-hop .5s ease-in-out infinite; }
+.dance .m-head { transform-origin: 50% 90%; animation: m-head .5s ease-in-out infinite; }
+.dance .m-arm-l { transform-origin: 100% 100%; animation: m-arm-l .5s ease-in-out infinite; }
+.dance .m-arm-r { transform-origin: 0% 50%; animation: m-arm-r .5s ease-in-out infinite; }
+.dance .m-leg-l { transform-origin: 50% 0%; animation: m-leg-l .5s ease-in-out infinite; }
+.dance .m-leg-r { transform-origin: 0% 0%; animation: m-leg-r .5s ease-in-out infinite; }
+.dance .m-shadow { transform-origin: 50% 50%; animation: m-shadow .5s ease-in-out infinite; }
+.dance-stars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.dance-stars i { position: absolute; top: -40px; left: calc(6% + var(--i) * 12%); font-style: normal; font-size: 1.8rem;
+  animation: star-fall 2.4s ease-in calc(var(--i) * .12s) forwards; }
+@keyframes dance-in { from { opacity: 0; } }
+@keyframes bubble { 0% { transform: scale(.6); } 12% { transform: scale(1.06); } 20%, 100% { transform: scale(1); } }
+@keyframes m-hop { 0%, 100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-22px) rotate(4deg); } }
+@keyframes m-head { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+@keyframes m-arm-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(22deg); } }
+@keyframes m-arm-r { 0%, 100% { transform: rotate(10deg); } 50% { transform: rotate(-38deg); } }
+@keyframes m-leg-l { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(16deg); } }
+@keyframes m-leg-r { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
+@keyframes m-shadow { 0%, 100% { transform: scaleX(1); opacity: .08; } 50% { transform: scaleX(.7); opacity: .04; } }
+@keyframes star-fall { to { transform: translateY(110vh) rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .dance .m-all, .dance .m-head, .dance g, .dance-stars i { animation: none; }
+}

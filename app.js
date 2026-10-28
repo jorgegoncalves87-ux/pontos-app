@@ -11,7 +11,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { landingHTML } from "./landing.js?v=2026-10-28.4";
+import { landingHTML } from "./landing.js?v=2026-10-28.5";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -338,7 +338,7 @@ function renderNotLinked() {
     ? "Este aparelho foi desligado pelo pai/mãe."
     : S.linkError === "invalid" ? "Este link de ligação já não é válido." : "Este aparelho ainda não está ligado à família.";
   app.innerHTML = `<div class="card" style="max-width:420px;margin:40px auto 0;text-align:center">
-    <h1>⭐ SAS Kids</h1><p>${msg}</p>
+    <img src="illustrations/mascote.svg" alt="" style="width:120px"><img src="illustrations/logo-texto.svg" alt="SAS Kids" style="display:block;height:34px;margin:8px auto 12px"><p>${msg}</p>
     <p class="muted">Pede ao pai/mãe um link novo: na app, ⚙️ Definições → <b>Ligar aparelho de um filho</b>.</p>
     <button class="link" id="toLogin">Sou o pai/mãe: entrar com email</button></div>`;
   document.getElementById("toLogin").onclick = () => { forgetJoinLink(); signOut(auth); };
@@ -406,7 +406,7 @@ function authError(code) {
 }
 
 function renderSetup() {
-  app.innerHTML = `<div style="max-width:480px;margin:20px auto 0">
+  app.innerHTML = `<div style="max-width:480px;margin:20px auto 0">${BRAND}
     <h1>Configurar a família</h1>
     <p class="muted">O PIN do pai/mãe protege a área de gestão. Os filhos não o devem saber.</p>
     <form class="card" id="setupForm">
@@ -437,7 +437,7 @@ function renderSetup() {
 }
 
 function renderProfiles() {
-  app.innerHTML = `<div class="header"><h1>Quem és tu?</h1><button class="link" id="logout">${isDevice() ? "Desligar" : "Sair"}</button></div>
+  app.innerHTML = `${BRAND}<div class="who"><img src="illustrations/mascote.svg" alt="" class="who-mascot"></div><div class="header"><h1>Quem és tu?</h1><button class="link" id="logout">${isDevice() ? "Desligar" : "Sair"}</button></div>
     <div class="profiles">
       ${S.kids.map((k) => `<button class="profile" data-kid="${k.id}"><span class="emoji">${avatar(k, "lg")}</span>${esc(k.name)}</button>`).join("")}
       <button class="profile" data-parent><span class="emoji">${parentAvatar("lg")}</span>Pai / Mãe</button>
@@ -467,18 +467,36 @@ function renderTabs(tabs) {
  * Ecrãs com barra de separadores: o conteúdo tem scroll próprio e a barra fica sempre em baixo
  * (no iPad, uma barra "position: fixed" podia ficar a meio do ecrã). Mantém o scroll entre renders.
  */
+const BRAND = `<div class="brandbar"><img src="illustrations/logo-icon.svg" alt="" class="bb-ic"><img src="illustrations/logo-texto.svg" alt="SAS Kids" class="bb-txt"></div>`;
 function renderShell(content, nav) {
   const prev = app.querySelector(".scroll");
   const top = prev && app.classList.contains("shell") && app.dataset.view === `${S.role}:${S.tab}` ? prev.scrollTop : 0;
   app.classList.add("shell");
   app.dataset.view = `${S.role}:${S.tab}`;
-  app.innerHTML = `<div class="scroll"><div class="inner">${content}</div></div>${nav}`;
+  app.innerHTML = `<div class="scroll"><div class="inner">${BRAND}${content}</div></div>${nav}`;
   app.querySelector(".scroll").scrollTop = top;
 }
 const scrollToTop = () => { const el = app.querySelector(".scroll"); if (el) el.scrollTop = 0; else window.scrollTo(0, 0); };
 
 function bindTabs() {
   app.querySelectorAll("[data-tab]").forEach((b) => (b.onclick = () => { S.tab = b.dataset.tab; render(); scrollToTop(); }));
+}
+
+// ---------- Mascote ----------
+// A mascote vem inline (e não num <img>) para os braços e as pernas poderem dançar.
+let mascotSvg = null;
+async function mascotDance(msg) {
+  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg")).text(); } catch { return toast(msg); }
+  document.querySelector(".dance")?.remove();
+  const el = document.createElement("div");
+  el.className = "dance";
+  el.setAttribute("role", "status");
+  el.innerHTML = `<div class="dance-stars">${"⭐🌟✨⭐🌟✨⭐🌟".split(/(?=[⭐🌟✨])/u).map((c, i) => `<i style="--i:${i}">${c}</i>`).join("")}</div>
+    <div class="dance-bubble">${esc(msg)}</div><div class="dance-mascot">${mascotSvg}</div>`;
+  document.body.appendChild(el);
+  const close = () => { el.classList.add("out"); setTimeout(() => el.remove(), 300); };
+  el.onclick = close;
+  setTimeout(close, 2800);
 }
 
 // ---------- Regras de negócio ----------
@@ -798,7 +816,7 @@ function renderKid(kid) {
   const pending = S.log.filter((e) => e.kidId === kid.id && e.type === "task" && e.status === "pending")
     .reduce((s, e) => s + e.points, 0);
   renderShell(`<div class="header"><h1 class="row"><button class="avatar-btn" id="myPhoto" aria-label="Mudar a minha foto">${avatar(kid, "md")}<span class="cam">📷</span></button> ${esc(kid.name)}</h1><div>${bellButton(kid.id)}<button class="link" id="switch">Trocar</button></div></div>
-    <div class="balance"><div class="big">⭐ ${kid.points || 0}</div><div>pontos${pending ? ` · +${pending} por validar` : ""}</div></div>
+    <div class="balance"><img src="illustrations/mascote.svg" alt="" class="bal-mascot"><div class="big">⭐ ${kid.points || 0}</div><div>pontos${pending ? ` · +${pending} por validar` : ""}</div></div>
     ${body}`, nav);
   document.getElementById("switch").onclick = () => setRole(null);
   bindTabs();
@@ -923,7 +941,7 @@ function bindKidActions(kid) {
         kidId: kid.id, type: "task", taskId: t.id, title: t.title, points: t.points,
         date, status: "pending", createdAt: serverTimestamp(),
       });
-      toast("Boa! Agora o pai/mãe tem de validar.");
+      mascotDance("Boa! Agora o pai/mãe tem de validar.");
     } else if (e.status === "pending") {
       await deleteDoc(doc(col("log"), e.id));
     } else {
@@ -948,7 +966,7 @@ function bindKidActions(kid) {
       kidId: kid.id, type: "special", taskId: t.id, title: t.title, points: t.points,
       date: today(), status: "pending", createdAt: serverTimestamp(),
     });
-    toast("Boa! O pai/mãe vai ver. 🤞");
+    mascotDance("Missão cumprida! O pai/mãe vai ver. 🤞");
   })));
   app.querySelectorAll("[data-special-undo]").forEach((b) => (b.onclick = () => guard(() => deleteDoc(doc(col("log"), b.dataset.specialUndo)))));
   const xf = document.getElementById("extraForm");
@@ -1168,7 +1186,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.4";
+const APP_VERSION = "2026-10-28.5";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
