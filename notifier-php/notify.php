@@ -19,7 +19,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 const TZ = 'Europe/Lisbon';
 const REMINDER_START = '19:45';
 const REMINDER_END = '21:30';
-$APP_URL = getenv('APP_URL') ?: 'https://pontos.sfpo.pt/';
+$APP_URL = getenv('APP_URL') ?: 'https://saskids.net/';
 $LOG_ONLY = in_array('--log-only', $argv ?? [], true);
 $NOW = getenv('NOTIFY_NOW') ? new DateTimeImmutable(getenv('NOTIFY_NOW')) : new DateTimeImmutable('now');
 

@@ -1,0 +1,14 @@
+# SAS Kids: um só endereço. pontos.sfpo.pt, www.saskids.net e http:// vão para https://saskids.net
+# (o resto do endereço, incluindo os links de ligação #join=..., mantém-se).
+Options -Indexes
+RewriteEngine On
+RewriteCond %{HTTP_HOST} !^saskids\.net$ [NC,OR]
+RewriteCond %{HTTPS} off
+# Deixa passar a verificação dos certificados (AutoSSL).
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ https://saskids.net%{REQUEST_URI} [R=301,L]
+
+# Ficheiro interno da publicação por FTP.
+<Files ".ftp-deploy-sync-state.json">
+  Require all denied
+</Files>
