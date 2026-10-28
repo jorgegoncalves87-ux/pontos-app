@@ -514,5 +514,10 @@
  "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "打开<b>通知</b>，选择<b>允许</b>。",
  "Este navegador não suporta notificações": "此浏览器不支持通知",
  "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "在 Android 上请使用 Chrome，或在 iPhone 上把应用添加到主屏幕。",
- "Percebi": "知道了"
+ "Percebi": "知道了",
+ "Idade": "年龄",
+ "Ex: 8": "例如：8",
+ "Escreve a idade (entre {min} e {max} anos).": "请填写年龄（{min} 到 {max} 岁）。",
+ "{n} anos": "{n} 岁",
+ "Falta a idade": "缺少年龄"
 }

@@ -514,5 +514,10 @@
  "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "Ouvre <b>Notifications</b> et choisis <b>Autoriser</b>.",
  "Este navegador não suporta notificações": "Ce navigateur ne prend pas en charge les notifications",
  "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "Utilise Chrome sur Android, ou installe l'appli sur l'écran d'accueil de l'iPhone.",
- "Percebi": "Compris"
+ "Percebi": "Compris",
+ "Idade": "Âge",
+ "Ex: 8": "Ex. : 8",
+ "Escreve a idade (entre {min} e {max} anos).": "Indique l'âge (entre {min} et {max} ans).",
+ "{n} anos": "{n} ans",
+ "Falta a idade": "Âge manquant"
 }

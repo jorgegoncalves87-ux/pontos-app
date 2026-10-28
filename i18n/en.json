@@ -514,5 +514,10 @@
  "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "Open <b>Notifications</b> and choose <b>Allow</b>.",
  "Este navegador não suporta notificações": "This browser doesn't support notifications",
  "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "Use Chrome on Android, or install the app on your iPhone's Home Screen.",
- "Percebi": "Got it"
+ "Percebi": "Got it",
+ "Idade": "Age",
+ "Ex: 8": "E.g. 8",
+ "Escreve a idade (entre {min} e {max} anos).": "Enter the age (between {min} and {max} years).",
+ "{n} anos": "{n} years old",
+ "Falta a idade": "Age missing"
 }

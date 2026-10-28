@@ -514,5 +514,10 @@
  "Abre <b>Notificações</b> e escolhe <b>Permitir</b>.": "Apri <b>Notifiche</b> e scegli <b>Consenti</b>.",
  "Este navegador não suporta notificações": "Questo browser non supporta le notifiche",
  "Usa o Chrome no Android, ou instala a app no ecrã principal do iPhone.": "Usa Chrome su Android, oppure installa l'app nella schermata Home dell'iPhone.",
- "Percebi": "Ho capito"
+ "Percebi": "Ho capito",
+ "Idade": "Età",
+ "Ex: 8": "Es.: 8",
+ "Escreve a idade (entre {min} e {max} anos).": "Scrivi l'età (tra {min} e {max} anni).",
+ "{n} anos": "{n} anni",
+ "Falta a idade": "Manca l'età"
 }

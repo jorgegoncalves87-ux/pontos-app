@@ -25,6 +25,7 @@ $NOW = getenv('NOTIFY_NOW') ? new DateTimeImmutable(getenv('NOTIFY_NOW')) : new 
 
 // ---------- Ligação ao Firebase ----------
 $emulator = getenv('FIRESTORE_EMULATOR_HOST');
+$STATS_FILE = getenv('STATS_FILE') ?: null; // estatísticas para o backoffice (bo/), recalculadas de hora a hora
 if ($emulator) {
     $PROJECT = getenv('GCLOUD_PROJECT') ?: 'demo-pontos';
     $BASE = "http://$emulator/v1/projects/$PROJECT/databases/(default)/documents";
@@ -33,6 +34,7 @@ if ($emulator) {
     // A chave fica na pasta pessoal da conta (ex.: /home/sfpo/pontos-secrets), fora de qualquer pasta pública.
     $home = getenv('HOME') ?: (function_exists('posix_getpwuid') ? posix_getpwuid(posix_geteuid())['dir'] : dirname(__DIR__, 2));
     $saPath = getenv('PONTOS_SERVICE_ACCOUNT') ?: rtrim($home, '/') . '/pontos-secrets/service-account.json';
+    $STATS_FILE ??= rtrim($home, '/') . '/pontos-secrets/stats.json';
     if (!is_readable($saPath)) { fwrite(STDERR, "Sem chave da conta de serviço em $saPath: nada a fazer.\n"); exit(0); }
     $sa = json_decode(file_get_contents($saPath), true);
     $PROJECT = $sa['project_id'];
@@ -133,6 +135,59 @@ function updateMany(array $updates): void {
         $r = http('POST', preg_replace('#/documents$#', '/documents:commit', $BASE), ['writes' => $writes]);
         if ($r['code'] >= 400) throw new RuntimeException('Erro a gravar: ' . json_encode($r['body']));
     }
+}
+
+/** Quantos documentos tem a subcoleção $coll de $parent (opcionalmente com um filtro). */
+function countDocs(string $parent, string $coll, ?array $where = null): int {
+    global $BASE;
+    $q = ['from' => [['collectionId' => $coll]]];
+    if ($where) $q['where'] = ['fieldFilter' => ['field' => ['fieldPath' => $where[0]], 'op' => $where[1], 'value' => $where[2]]];
+    $r = http('POST', "$BASE/$parent:runAggregationQuery", ['structuredAggregationQuery' => ['structuredQuery' => $q, 'aggregations' => [['alias' => 'n', 'count' => new stdClass()]]]]);
+    if ($r['code'] >= 400) throw new RuntimeException("Erro a contar $coll: " . json_encode($r['body']));
+    return (int)($r['body'][0]['result']['aggregateFields']['n']['integerValue'] ?? 0);
+}
+
+/** Data do registo mais recente do histórico (ou null). */
+function lastActivity(string $parent): ?string {
+    global $BASE;
+    $r = http('POST', "$BASE/$parent:runQuery", ['structuredQuery' => [
+        'from' => [['collectionId' => 'log']], 'orderBy' => [['field' => ['fieldPath' => 'createdAt'], 'direction' => 'DESCENDING']], 'limit' => 1,
+    ]]);
+    if ($r['code'] >= 400) return null;
+    foreach ($r['body'] as $row) if (isset($row['document'])) return doc($row['document'])['createdAt'] ?? null;
+    return null;
+}
+
+/**
+ * Números de uma família para o backoffice. Só contagens e idades: sem nomes, fotos, emails ou textos.
+ * O identificador é um resumo (hash) do id da família, para não expor o id verdadeiro.
+ */
+function familyStats(array $fam): array {
+    global $NOW;
+    $path = 'families/' . $fam['_id'];
+    $year = (int)$NOW->format('Y');
+    $kids = listDocs("$path/kids");
+    $tasks = array_filter(listDocs("$path/tasks"), fn($t) => ($t['active'] ?? true) !== false);
+    $rewards = array_filter(listDocs("$path/rewards"), fn($r) => ($r['status'] ?? '') === 'active');
+    $tokens = listDocs("$path/pushTokens");
+    $ts = fn($days) => ['timestampValue' => $NOW->modify("-$days days")->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z')];
+    return [
+        'id' => substr(hash('sha256', $fam['_id']), 0, 8),
+        'createdAt' => $fam['createdAt'] ?? null,
+        'lang' => $fam['lang'] ?? 'pt',
+        'tz' => $fam['tz'] ?? null,
+        'kidAges' => array_values(array_map(fn($k) => isset($k['birthYear']) ? $year - (int)$k['birthYear'] : null, $kids)),
+        'tasks' => count(array_filter($tasks, fn($t) => empty($t['special']))),
+        'missions' => count(array_filter($tasks, fn($t) => !empty($t['special']))),
+        'rewards' => count($rewards),
+        'kidDevices' => countDocs($path, 'members'),
+        'pushParent' => (bool)array_filter($tokens, fn($t) => ($t['parent'] ?? false) === true),
+        'pushKids' => count(array_unique(array_merge(...array_map(fn($t) => $t['kids'] ?? [], $tokens ?: [[]])))),
+        'log7' => countDocs($path, 'log', ['createdAt', 'GREATER_THAN_OR_EQUAL', $ts(7)]),
+        'log30' => countDocs($path, 'log', ['createdAt', 'GREATER_THAN_OR_EQUAL', $ts(30)]),
+        'logTotal' => countDocs($path, 'log'),
+        'lastActivity' => lastActivity($path),
+    ];
 }
 
 // ---------- Envio ----------
@@ -298,6 +353,18 @@ $failed = 0;
 $families = listDocs('families');
 foreach ($families as $fam) {
     try { processFamily($fam); } catch (Throwable $e) { $failed++; fwrite(STDERR, "[{$fam['_id']}] erro: " . $e->getMessage() . "\n"); }
+}
+// Estatísticas para o backoffice, no máximo uma vez por hora (ou já, com FORCE_STATS=1).
+if ($STATS_FILE && (getenv('FORCE_STATS') || !is_file($STATS_FILE) || filemtime($STATS_FILE) < time() - 55 * 60)) {
+    $rows = [];
+    foreach ($families as $fam) {
+        try { $rows[] = familyStats($fam); } catch (Throwable $e) { fwrite(STDERR, "[{$fam['_id']}] estatísticas: " . $e->getMessage() . "\n"); }
+    }
+    $tmp = "$STATS_FILE.tmp";
+    file_put_contents($tmp, json_encode(['generatedAt' => $NOW->format(DATE_ATOM), 'families' => $rows], JSON_UNESCAPED_UNICODE));
+    @chmod($tmp, 0600);
+    rename($tmp, $STATS_FILE);
+    echo 'Estatísticas: ' . count($rows) . " família(s).\n";
 }
 echo 'Feito: ' . count($families) . ' família(s)' . ($failed ? ", $failed com erro" : '') . ".\n";
 exit($failed ? 1 : 0);

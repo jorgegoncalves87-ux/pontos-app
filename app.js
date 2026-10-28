@@ -11,8 +11,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, isSupported as messagingSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.10";
-import { landingHTML } from "./landing.js?v=2026-10-28.10";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.11";
+import { landingHTML } from "./landing.js?v=2026-10-28.11";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
@@ -1166,7 +1166,7 @@ function parentKids() {
   return (S.kids.length > 1 ? `<h2 style="margin-top:0">${tr("Comparação")}</h2>${siblingsSummary()}` : "")
     + (S.kids.length ? S.kids.map((k) => `<div class="card">
       <div class="row"><button class="avatar-btn" data-kid-photo="${k.id}" aria-label="${tr("Mudar a foto de {name}", { name: esc(k.name) })}">${avatar(k, "md")}<span class="cam">📷</span></button>
-        <div class="grow"><h3>${esc(k.name)}</h3><div class="muted small">${pendingRewardCost(k.id) ? tr("{n} pts em pedidos de prémio", { n: pendingRewardCost(k.id) }) : ""}</div></div>
+        <div class="grow"><h3>${esc(k.name)} ${kidAge(k) != null ? `<span class="muted small">· ${tr("{n} anos", { n: kidAge(k) })}</span>` : `<button class="pill pending" data-edit-kid="${k.id}">${tr("Falta a idade")}</button>`}</h3><div class="muted small">${pendingRewardCost(k.id) ? tr("{n} pts em pedidos de prémio", { n: pendingRewardCost(k.id) }) : ""}</div></div>
         <div class="pts" style="font-size:1.4rem">⭐ ${k.points || 0}</div></div>
       ${weekChart(k)}
       <div class="row wrap" style="margin-top:10px">
@@ -1281,7 +1281,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.10";
+const APP_VERSION = "2026-10-28.11";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever
@@ -1404,10 +1404,15 @@ function photoForm(title, current, save) {
   setTimeout(() => form.querySelector("#photoFile")?.click(), 50);
 }
 
+const MIN_AGE = 2, MAX_AGE = 17;
+/** Idade aproximada (a partir do ano de nascimento guardado), ou null se ainda não foi indicada. */
+const kidAge = (kid) => (kid?.birthYear ? new Date().getFullYear() - kid.birthYear : null);
+
 function kidForm(kid) {
   const emoji = kid?.emoji || EMOJIS[S.kids.length % EMOJIS.length];
   const form = openForm(kid ? tr("Editar {name}", { name: kid.name }) : tr("Novo filho"), `
     <label>${tr("Nome")}</label><input name="name" required maxlength="30" value="${esc(kid?.name || "")}">
+    <label>${tr("Idade")}</label><input name="age" type="number" inputmode="numeric" min="${MIN_AGE}" max="${MAX_AGE}" required value="${kidAge(kid) ?? ""}" placeholder="${tr("Ex: 8")}">
     <label>${tr("Foto")}</label>${photoFieldHtml()}
     <label>${tr("Emoji (quando não há foto)")}</label><select name="emoji">${EMOJIS.map((e) => `<option ${e === emoji ? "selected" : ""}>${e}</option>`).join("")}</select>
     <label>${kid ? tr("Novo PIN (deixa vazio para manter)") : tr("PIN (4 a 6 dígitos)")}</label>
@@ -1416,7 +1421,10 @@ function kidForm(kid) {
   async (fd) => {
     const name = fd.get("name").trim(), pin = fd.get("pin");
     if (!name) throw new Error(tr("Escreve o nome."));
-    const data = { name, emoji: fd.get("emoji") };
+    const age = Number(fd.get("age"));
+    if (!Number.isInteger(age) || age < MIN_AGE || age > MAX_AGE) throw new Error(tr("Escreve a idade (entre {min} e {max} anos).", { min: MIN_AGE, max: MAX_AGE }));
+    // Guarda-se só o ano de nascimento aproximado: a idade sobe sozinha e não fica a data de nascimento.
+    const data = { name, emoji: fd.get("emoji"), birthYear: new Date().getFullYear() - age };
     if (photo.changed) data.photo = photo.dataUrl();
     if (pin || !kid) {
       if (!validPin(pin)) throw new Error(tr("O PIN tem de ter 4 a 6 dígitos."));
