@@ -1,0 +1,4 @@
+# As imagens são públicas (a Meta vai buscá-las); a fila não.
+<Files "queue.json">
+  Require all denied
+</Files>
