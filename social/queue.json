@@ -1,5 +1,5 @@
 {
- "_info": "Fila de publicações do Instagram (@saskidsapp). 'at' é a hora de Lisboa. Só sai o que tiver approved: true (aprovado pelo Jorge na véspera). Publicado pelo notifier-php/instagram.php; o que já saiu fica em pontos-secrets/instagram-state.json.",
+ "_info": "Fila de publicações do Instagram (@saskidsapp): imagens ('image') e Reels ('video'). 'at' é a hora de Lisboa. Só sai o que tiver approved: true (validado pelo Jorge, aos lotes de 20 Reels). Publicado pelo notifier-php/instagram.php; o que já saiu fica em pontos-secrets/instagram-state.json.",
  "posts": [
   {
    "id": "01-privacidade",
@@ -161,6 +161,146 @@
    "at": "2026-11-15 10:00",
    "approved": false,
    "caption": "Cama à hora combinada? +5 pontos 🌙\n\nBoa noite, sem negociações. Na SAS Kids, ir para a cama à hora combinada é uma tarefa como as outras, e conta pontos.\n\nBom domingo e boa semana! 💛\n\n#saskids #rotinadesono #horadedormir #rotinainfantil #maternidade"
+  },
+  {
+   "id": "r01-cada-tarefa-uma-festa",
+   "video": "social/reels/r01-cada-tarefa-uma-festa.mp4",
+   "at": "2026-11-02 19:00",
+   "approved": false,
+   "caption": "Cada tarefa, uma festa 🎉\n\nCama feita, dentes lavados, quarto arrumado e cama à hora: na SAS Kids, cada tarefa vale pontos e a mascote festeja com eles.\n\nExperimenta grátis no link da bio.\n\n#saskids #rotinainfantil #parentalidade #paisefilhos #criancasfelizes"
+  },
+  {
+   "id": "r02-como-funciona",
+   "video": "social/reels/r02-como-funciona.mp4",
+   "at": "2026-11-03 19:00",
+   "approved": false,
+   "caption": "Como funciona a SAS Kids, em 10 segundos ⏱️\n\n1️⃣ Adicionas os filhos\n2️⃣ Escolhes as tarefas\n3️⃣ Combinas os prémios\n4️⃣ Eles marcam, tu validas\n\nGrátis no link da bio.\n\n#saskids #appparapais #parentalidade #organizacaofamiliar #rotinainfantil"
+  },
+  {
+   "id": "r03-antes-depois",
+   "video": "social/reels/r03-antes-depois.mp4",
+   "at": "2026-11-04 19:00",
+   "approved": false,
+   "caption": "Antes: “Já te disse 10 vezes!” 😩\nDepois: “Já fiz!” ✓\n\nQuando as tarefas valem pontos, são eles a lembrar-se. E ainda há missões para os desafios maiores.\n\n#saskids #disciplinapositiva #parentalidade #maternidade #paternidade"
+  },
+  {
+   "id": "r04-brinquedos",
+   "video": "social/reels/r04-brinquedos.mp4",
+   "at": "2026-11-05 19:00",
+   "approved": false,
+   "caption": "Brinquedos arrumados? +5 pontos 🧸\n\nArrumar também é brincar, sobretudo quando a mascote ajuda.\n\n#saskids #arrumacao #autonomiainfantil #rotinainfantil #criancasfelizes"
+  },
+  {
+   "id": "r05-rotina-da-manha",
+   "video": "social/reels/r05-rotina-da-manha.mp4",
+   "at": "2026-11-06 19:00",
+   "approved": false,
+   "caption": "A rotina da manhã, sem correrias ☀️\n\nCama feita, vestido sozinho, dentes lavados e mochila pronta. Quatro tarefas, quatro festas.\n\nComo são as manhãs lá em casa?\n\n#saskids #rotinadamanha #rotinaescolar #parentalidade #paisefilhos"
+  },
+  {
+   "id": "r06-banho",
+   "video": "social/reels/r06-banho.mp4",
+   "at": "2026-11-07 19:00",
+   "approved": false,
+   "caption": "Banho sem reclamar? +5 pontos 🛁\n\nCom espuma, patinho e pontos, até o banho fica divertido.\n\n#saskids #horadobanho #rotinainfantil #maternidade #criancasfelizes"
+  },
+  {
+   "id": "r07-animal",
+   "video": "social/reels/r07-animal.mp4",
+   "at": "2026-11-08 19:00",
+   "approved": false,
+   "caption": "O cão já comeu? +5 pontos 🐶\n\nCuidar do animal lá de casa: a primeira responsabilidade a sério.\n\n#saskids #criancaseanimais #responsabilidade #autonomiainfantil #paisefilhos"
+  },
+  {
+   "id": "r08-jantar-em-equipa",
+   "video": "social/reels/r08-jantar-em-equipa.mp4",
+   "at": "2026-11-09 19:00",
+   "approved": false,
+   "caption": "Jantar em equipa 🍽️\n\nPôr a mesa, comer a fruta, levantar a mesa e arrumar a loiça. Cada um ajuda um bocadinho, e todos ganham pontos.\n\n#saskids #ajudaremcasa #tarefasdecasa #familia #paisefilhos"
+  },
+  {
+   "id": "r09-tpc",
+   "video": "social/reels/r09-tpc.mp4",
+   "at": "2026-11-10 19:00",
+   "approved": false,
+   "caption": "TPC feito? +10 pontos ✏️\n\nAs tarefas que custam mais valem mais pontos. Tu decides quanto vale cada uma.\n\n#saskids #trabalhosdecasa #rotinaescolar #educacaoinfantil #parentalidade"
+  },
+  {
+   "id": "r10-ler",
+   "video": "social/reels/r10-ler.mp4",
+   "at": "2026-11-11 19:00",
+   "approved": false,
+   "caption": "20 minutos a ler? +10 pontos 📖\n\nO hábito de ler constrói-se uma página de cada vez.\n\n#saskids #habitodeleitura #livrosinfantis #educacaoinfantil #criancasfelizes"
+  },
+  {
+   "id": "r11-desporto",
+   "video": "social/reels/r11-desporto.mp4",
+   "at": "2026-11-12 19:00",
+   "approved": false,
+   "caption": "Treino feito? Golo! ⚽ +10 pontos\n\nDesporto ou instrumento, 15 minutos por dia já contam.\n\n#saskids #desportoinfantil #habitossaudaveis #parentalidade #criancasativas"
+  },
+  {
+   "id": "r12-tarefas-de-crescidos",
+   "video": "social/reels/r12-tarefas-de-crescidos.mp4",
+   "at": "2026-11-13 19:00",
+   "approved": false,
+   "caption": "Tarefas de crescidos 💪\n\nEstender a roupa, aspirar, levar o lixo e estudar para o teste. A partir dos 8-10 anos, a SAS Kids sugere tarefas mais desafiantes, com mais pontos.\n\n#saskids #pretweens #autonomiainfantil #tarefasporidade #parentalidade"
+  },
+  {
+   "id": "r13-ecra",
+   "video": "social/reels/r13-ecra.mp4",
+   "at": "2026-11-14 19:00",
+   "approved": false,
+   "caption": "Tempo de ecrã cumprido? +10 pontos 📱\n\nCumprir o limite também é uma tarefa, e das que mais custam. Desligar e ir brincar!\n\n#saskids #tempodeecra #criancaseecras #parentalidade #brincarlafora"
+  },
+  {
+   "id": "r14-cesto",
+   "video": "social/reels/r14-cesto.mp4",
+   "at": "2026-11-15 19:00",
+   "approved": false,
+   "caption": "Roupa suja no cesto? +3 pontos 🧦\n\nAs tarefas pequenas também contam, e são as primeiras a criar o hábito.\n\n#saskids #tarefasdecasa #autonomiainfantil #rotinainfantil #maternidade"
+  },
+  {
+   "id": "r15-lanche",
+   "video": "social/reels/r15-lanche.mp4",
+   "at": "2026-11-16 19:00",
+   "approved": false,
+   "caption": "Lanche feito por ti? +5 pontos 🥪\n\nMãos na massa: preparar o próprio lanche é uma tarefa a partir dos 9 anos.\n\n#saskids #lancheescolar #autonomiainfantil #cozinharcomcriancas #paisefilhos"
+  },
+  {
+   "id": "r16-missoes",
+   "video": "social/reels/r16-missoes.mp4",
+   "at": "2026-11-17 19:00",
+   "approved": false,
+   "caption": "Missões: desafios com prazo 🏆\n\nLer um livro inteiro (+50), arrumar o armário (+30), lavar o carro (+25), aprender a andar de bicicleta (+60). No fim do prazo, tu decides se ganharam.\n\nQue missão lançavas?\n\n#saskids #desafiosparacriancas #educacaoinfantil #paisefilhos #criancasfelizes"
+  },
+  {
+   "id": "r17-sapatos",
+   "video": "social/reels/r17-sapatos.mp4",
+   "at": "2026-11-18 19:00",
+   "approved": false,
+   "caption": "Sapatos no lugar? +3 pontos 👟\n\nCasa arrumada desde a porta: sapatos e casaco no sítio ao chegar.\n\n#saskids #arrumacao #rotinainfantil #autonomiainfantil #maternidade"
+  },
+  {
+   "id": "r18-levantar-mesa",
+   "video": "social/reels/r18-levantar-mesa.mp4",
+   "at": "2026-11-19 19:00",
+   "approved": false,
+   "caption": "Mesa levantada? +5 pontos 🍽️\n\nAcabou o jantar? Ajudas tu.\n\n#saskids #ajudaremcasa #tarefasdecasa #rotinainfantil #paisefilhos"
+  },
+  {
+   "id": "r19-armario",
+   "video": "social/reels/r19-armario.mp4",
+   "at": "2026-11-20 19:00",
+   "approved": false,
+   "caption": "Missão cumprida: armário arrumado! +30 pontos 👕\n\nAs missões são desafios com prazo para as tarefas maiores.\n\n#saskids #missao #arrumacao #autonomiainfantil #parentalidade"
+  },
+  {
+   "id": "r20-carro",
+   "video": "social/reels/r20-carro.mp4",
+   "at": "2026-11-21 19:00",
+   "approved": false,
+   "caption": "Missão de fim de semana: lavar o carro 🚗🫧 +25 pontos\n\nUma tarde em família que ainda vale pontos.\n\n#saskids #fimdesemanaemfamilia #desafiosparacriancas #paisefilhos #criancasfelizes"
   }
  ]
 }

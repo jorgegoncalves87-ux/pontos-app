@@ -1,7 +1,7 @@
 <?php
 // Publicador do Instagram da SAS Kids (@saskidsapp), para correr no alojamento (cPanel) com uma
 // tarefa agendada a cada 15 minutos. Lê a fila em social/queue.json e publica, um de cada vez,
-// os posts aprovados ("approved": true) cuja hora (de Lisboa) já chegou. As imagens são servidas pelo próprio site
+// os posts aprovados ("approved": true) cuja hora (de Lisboa) já chegou: imagens ou Reels (MP4). Os ficheiros são servidos pelo próprio site
 // (https://saskids.net/social/...), que é de onde a Meta as vai buscar.
 //
 // O acesso à conta fica FORA da pasta pública, em /home/UTILIZADOR/pontos-secrets/instagram.json
@@ -119,19 +119,25 @@ $lock = fopen("$SECRETS/instagram.lock", 'c');
 if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) exit(0);
 
 $p = $due[0];
-$imageUrl = $SITE . '/' . ltrim($p['image'], '/');
-if ($DRY) { out("[dry] publicaria {$p['id']} ($imageUrl)."); exit(0); }
+// Um post é uma imagem ("image") ou um Reel ("video", MP4 9:16).
+$isReel = !empty($p['video']);
+$mediaUrl = $SITE . '/' . ltrim($isReel ? $p['video'] : $p['image'], '/');
+if ($DRY) { out("[dry] publicaria {$p['id']} ($mediaUrl)."); exit(0); }
 
 $token = $conf['page_token'];
 try {
-    $container = graph('POST', "{$conf['ig_user_id']}/media", ['image_url' => $imageUrl, 'caption' => $p['caption'], 'access_token' => $token])['id'];
+    $params = $isReel
+        ? ['media_type' => 'REELS', 'video_url' => $mediaUrl, 'share_to_feed' => 'true', 'caption' => $p['caption'], 'access_token' => $token]
+        : ['image_url' => $mediaUrl, 'caption' => $p['caption'], 'access_token' => $token];
+    $container = graph('POST', "{$conf['ig_user_id']}/media", $params)['id'];
     // A Meta descarrega e processa a imagem antes de deixar publicar.
     $status = '';
-    $deadline = time() + (int)(getenv('IG_POLL_SECONDS') ?: 90);
+    // Os vídeos demoram mais a processar do lado da Meta (até alguns minutos).
+    $deadline = time() + (int)(getenv('IG_POLL_SECONDS') ?: ($isReel ? 600 : 90));
     do {
         $status = graph('GET', $container, ['fields' => 'status_code', 'access_token' => $token])['status_code'] ?? '';
         if ($status === 'FINISHED' || $status === 'ERROR') break;
-        sleep(getenv('IG_POLL_SECONDS') ? 0 : 5);
+        sleep(getenv('IG_POLL_SECONDS') ? 0 : ($isReel ? 15 : 5));
     } while (time() < $deadline);
     if ($status !== 'FINISHED') throw new RuntimeException("a imagem não ficou pronta (estado: " . ($status ?: '?') . ")");
     $media = graph('POST', "{$conf['ig_user_id']}/media_publish", ['creation_id' => $container, 'access_token' => $token])['id'];
