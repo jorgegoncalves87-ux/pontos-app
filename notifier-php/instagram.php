@@ -6,8 +6,8 @@
 //
 // O acesso à conta fica FORA da pasta pública, em /home/UTILIZADOR/pontos-secrets/instagram.json
 // (permissões 600). Na primeira vez basta lá pôr {"user_token": "..."} (token de utilizador de
-// longa duração, com instagram_basic, instagram_content_publish, pages_show_list e
-// pages_read_engagement): o script troca-o pelo token da Página, que não expira, guarda-o e apaga
+// longa duração, com instagram_basic, instagram_content_publish, pages_show_list,
+// pages_read_engagement e business_management): o script troca-o pelo token da Página, que não expira, guarda-o e apaga
 // o token de utilizador. O que já foi publicado fica em pontos-secrets/instagram-state.json.
 //
 // Cron Job (a cada 15 minutos):
@@ -58,11 +58,27 @@ $conf = json_decode(file_get_contents($CONF_FILE), true) ?: [];
 
 // Primeira vez: troca o token de utilizador pelo token da Página ligada a @saskidsapp.
 if (empty($conf['page_token']) && !empty($conf['user_token'])) {
+    $fields = 'name,access_token,instagram_business_account{id,username}';
     try {
-        $pages = graph('GET', 'me/accounts', ['fields' => 'name,access_token,instagram_business_account{id,username}', 'access_token' => $conf['user_token']])['data'] ?? [];
+        $pages = graph('GET', 'me/accounts', ['fields' => $fields, 'access_token' => $conf['user_token']])['data'] ?? [];
     } catch (Throwable $e) { out('Token de utilizador recusado. ' . $e->getMessage()); exit(1); }
+    // Páginas criadas a partir do Instagram costumam ficar num portefólio empresarial e não aparecem
+    // em me/accounts: procura-as também lá (precisa da permissão business_management).
+    if (!array_filter($pages, fn($p) => !empty($p['instagram_business_account']))) {
+        try {
+            $biz = graph('GET', 'me/businesses', ['fields' => "name,owned_pages{{$fields}},client_pages{{$fields}}", 'access_token' => $conf['user_token']])['data'] ?? [];
+            foreach ($biz as $b) foreach (['owned_pages', 'client_pages'] as $edge) foreach ($b[$edge]['data'] ?? [] as $p) $pages[] = $p;
+        } catch (Throwable $e) { out('Sem acesso aos portefólios empresariais (falta a permissão business_management?). ' . $e->getMessage()); }
+    }
+    // Uma Página sem token na lista: pede-o diretamente.
+    foreach ($pages as &$p) {
+        if (empty($p['access_token']) && !empty($p['id'])) {
+            try { $p = array_merge($p, graph('GET', $p['id'], ['fields' => $fields, 'access_token' => $conf['user_token']])); } catch (Throwable $e) {}
+        }
+    }
+    unset($p);
     $found = null;
-    foreach ($pages as $p) if (strcasecmp($p['instagram_business_account']['username'] ?? '', USERNAME) === 0) $found = $p;
+    foreach ($pages as $p) if (!empty($p['access_token']) && strcasecmp($p['instagram_business_account']['username'] ?? '', USERNAME) === 0) $found = $p;
     if (!$found) {
         $seen = array_map(fn($p) => ($p['name'] ?? '?') . ' → ' . ($p['instagram_business_account']['username'] ?? 'sem Instagram'), $pages);
         out('Nenhuma Página ligada a @' . USERNAME . '. Encontrei: ' . ($seen ? implode('; ', $seen) : 'nenhuma Página'));
