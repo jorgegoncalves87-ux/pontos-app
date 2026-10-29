@@ -48,6 +48,7 @@ jobs:
             **/.git*/**
             .github/**
             notifier/**
+            social/gerador/**
             README.md
             firebase.json
             firestore.rules
