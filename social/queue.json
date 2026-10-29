@@ -1,59 +1,166 @@
 {
- "_info": "Fila de publicações do Instagram (@saskidsapp). 'at' é a hora de Lisboa. Publicado pelo notifier-php/instagram.php; o que já saiu fica registado em pontos-secrets/instagram-state.json.",
+ "_info": "Fila de publicações do Instagram (@saskidsapp). 'at' é a hora de Lisboa. Só sai o que tiver approved: true (aprovado pelo Jorge na véspera). Publicado pelo notifier-php/instagram.php; o que já saiu fica em pontos-secrets/instagram-state.json.",
  "posts": [
   {
    "id": "01-privacidade",
    "image": "social/posts/01-privacidade.jpg",
    "at": "2026-10-30 10:00",
-   "caption": "Sem anúncios. Sem rastreio. 🛡️\n\nNa SAS Kids:\n• as crianças não criam conta nem dão email\n• os dados são só da tua família\n• apagas tudo quando quiseres, na própria app\n\nFeito em Portugal.\n\n#saskids #privacidade #segurancadigital #parentalidade #feitoemportugal"
+   "caption": "Sem anúncios. Sem rastreio. 🛡️\n\nNa SAS Kids:\n• as crianças não criam conta nem dão email\n• os dados são só da tua família\n• apagas tudo quando quiseres, na própria app\n\nFeito em Portugal.\n\n#saskids #privacidade #segurancadigital #parentalidade #feitoemportugal",
+   "approved": true
   },
   {
    "id": "02-instalar",
    "image": "social/posts/02-instalar.jpg",
    "at": "2026-10-30 13:00",
-   "caption": "Instala em 1 minuto 📲\n\n1. Abre saskids.net no telemóvel\n2. Toca em Partilhar (iPhone) ou ⋮ (Android)\n3. Escolhe “Adicionar ao ecrã principal”\n\nFunciona em iPhone, Android e tablet, sem passar pela loja de apps. Os filhos usam o próprio aparelho com um PIN.\n\n#saskids #appparapais #parentalidade #tecnologiaemfamilia"
+   "caption": "Instala em 1 minuto 📲\n\n1. Abre saskids.net no telemóvel\n2. Toca em Partilhar (iPhone) ou ⋮ (Android)\n3. Escolhe “Adicionar ao ecrã principal”\n\nFunciona em iPhone, Android e tablet, sem passar pela loja de apps. Os filhos usam o próprio aparelho com um PIN.\n\n#saskids #appparapais #parentalidade #tecnologiaemfamilia",
+   "approved": true
   },
   {
    "id": "03-missoes",
    "image": "social/posts/03-missoes.jpg",
    "at": "2026-10-30 19:00",
-   "caption": "Missões: desafios com prazo 🚲\n\nAlém das tarefas do dia a dia, podes lançar missões especiais: “Ler um livro inteiro”, “Ajudar a lavar o carro” ou “Aprender a andar de bicicleta até domingo”. No fim do prazo, tu decides se ganharam os pontos.\n\nQue missão lançavas esta semana?\n\n#saskids #desafiosparacriancas #educacaoinfantil #paisefilhos #criancasfelizes"
+   "caption": "Missões: desafios com prazo 🚲\n\nAlém das tarefas do dia a dia, podes lançar missões especiais: “Ler um livro inteiro”, “Ajudar a lavar o carro” ou “Aprender a andar de bicicleta até domingo”. No fim do prazo, tu decides se ganharam os pontos.\n\nQue missão lançavas esta semana?\n\n#saskids #desafiosparacriancas #educacaoinfantil #paisefilhos #criancasfelizes",
+   "approved": true
   },
   {
    "id": "04-ja-fiz",
    "image": "social/posts/04-ja-fiz.jpg",
    "at": "2026-10-31 10:00",
-   "caption": "Menos “já te disse”. Mais “já fiz!” 🙌\n\n✅ Os filhos marcam o que fizeram\n👍 Tu aprovas com um toque\n🔔 Lembretes no telemóvel à hora certa\n🔐 Cada filho com o seu perfil e PIN\n\nMenos lembretes da tua parte, mais iniciativa da parte deles.\n\n#saskids #parentalidade #disciplinapositiva #autonomiainfantil #paisefilhos"
+   "caption": "Menos “já te disse”. Mais “já fiz!” 🙌\n\n✅ Os filhos marcam o que fizeram\n👍 Tu aprovas com um toque\n🔔 Lembretes no telemóvel à hora certa\n🔐 Cada filho com o seu perfil e PIN\n\nMenos lembretes da tua parte, mais iniciativa da parte deles.\n\n#saskids #parentalidade #disciplinapositiva #autonomiainfantil #paisefilhos",
+   "approved": true
   },
   {
    "id": "05-dentes",
    "image": "social/posts/05-dentes.jpg",
    "at": "2026-10-31 13:00",
-   "caption": "Dentes lavados, sem discussões 🪥\n\nQuando a tarefa fica feita, a mascote da SAS Kids festeja com eles. Cada tarefa tem a sua animação.\n\nPequenas vitórias, todos os dias.\n\n#saskids #rotinainfantil #higieneinfantil #criancasfelizes #maternidade"
+   "caption": "Dentes lavados, sem discussões 🪥\n\nQuando a tarefa fica feita, a mascote da SAS Kids festeja com eles. Cada tarefa tem a sua animação.\n\nPequenas vitórias, todos os dias.\n\n#saskids #rotinainfantil #higieneinfantil #criancasfelizes #maternidade",
+   "approved": true
   },
   {
    "id": "06-premios",
    "image": "social/posts/06-premios.jpg",
    "at": "2026-10-31 19:00",
-   "caption": "O que se ganha com os pontos? 🎁\n\nAlgumas ideias que já vêm na app:\n🍨 Escolher a sobremesa: 30 pontos\n🎬 Escolher o filme da noite: 50\n🥐 Pequeno-almoço na cama: 100\n🧸 Convidar um amigo cá para casa: 150\n🍿 Ida ao cinema: 400\n\nOs melhores prémios nem sempre custam dinheiro. Qual é o favorito dos teus filhos?\n\n#saskids #parentalidade #disciplinapositiva #paisefilhos #ideiasparacriancas"
+   "caption": "O que se ganha com os pontos? 🎁\n\nAlgumas ideias que já vêm na app:\n🍨 Escolher a sobremesa: 30 pontos\n🎬 Escolher o filme da noite: 50\n🥐 Pequeno-almoço na cama: 100\n🧸 Convidar um amigo cá para casa: 150\n🍿 Ida ao cinema: 400\n\nOs melhores prémios nem sempre custam dinheiro. Qual é o favorito dos teus filhos?\n\n#saskids #parentalidade #disciplinapositiva #paisefilhos #ideiasparacriancas",
+   "approved": true
   },
   {
    "id": "07-cama",
    "image": "social/posts/07-cama.jpg",
    "at": "2026-11-01 10:00",
-   "caption": "Cama feita? +5 pontos ⭐\n\nA SAS Kids traz 24 tarefas prontas a usar, da cama aos trabalhos de casa, já ajustadas à idade de cada filho. Tu só confirmas os pontos (e mudas o que quiseres).\n\nQue tarefa custa mais lá em casa? Conta-nos nos comentários 👇\n\n#saskids #tarefasdecasa #autonomiainfantil #rotinainfantil #maternidade #paternidade"
+   "caption": "Cama feita? +5 pontos ⭐\n\nA SAS Kids traz 24 tarefas prontas a usar, da cama aos trabalhos de casa, já ajustadas à idade de cada filho. Tu só confirmas os pontos (e mudas o que quiseres).\n\nQue tarefa custa mais lá em casa? Conta-nos nos comentários 👇\n\n#saskids #tarefasdecasa #autonomiainfantil #rotinainfantil #maternidade #paternidade",
+   "approved": true
   },
   {
    "id": "08-como-funciona",
    "image": "social/posts/08-como-funciona.jpg",
    "at": "2026-11-01 13:00",
-   "caption": "Como funciona, em 4 passos 👇\n\n1️⃣ Adicionas os filhos (nome, idade e um PIN para cada um)\n2️⃣ Escolhes as tarefas: já vêm sugeridas para a idade de cada filho\n3️⃣ Combinas os prémios e quanto custam\n4️⃣ Eles marcam o que fizeram e tu validas\n\nEm 5 minutos está pronto. Link na bio.\n\n#saskids #parentalidade #rotinainfantil #organizacaofamiliar #paisefilhos"
+   "caption": "Como funciona, em 4 passos 👇\n\n1️⃣ Adicionas os filhos (nome, idade e um PIN para cada um)\n2️⃣ Escolhes as tarefas: já vêm sugeridas para a idade de cada filho\n3️⃣ Combinas os prémios e quanto custam\n4️⃣ Eles marcam o que fizeram e tu validas\n\nEm 5 minutos está pronto. Link na bio.\n\n#saskids #parentalidade #rotinainfantil #organizacaofamiliar #paisefilhos",
+   "approved": true
   },
   {
    "id": "09-apresentacao",
    "image": "social/posts/09-apresentacao.jpg",
    "at": "2026-11-01 19:00",
-   "caption": "Tarefas que valem pontos. Prémios que valem a pena. ⭐\n\nA SAS Kids é a app que põe a família toda do mesmo lado: os filhos fazem as tarefas, ganham pontos e trocam-nos pelos prémios que vocês combinam.\n\nGrátis durante o lançamento. Experimenta no link da bio 👆\n\n#saskids #parentalidade #paisefilhos #rotinasemfamilia #educacaoinfantil #criancasfelizes"
+   "caption": "Tarefas que valem pontos. Prémios que valem a pena. ⭐\n\nA SAS Kids é a app que põe a família toda do mesmo lado: os filhos fazem as tarefas, ganham pontos e trocam-nos pelos prémios que vocês combinam.\n\nGrátis durante o lançamento. Experimenta no link da bio 👆\n\n#saskids #parentalidade #paisefilhos #rotinasemfamilia #educacaoinfantil #criancasfelizes",
+   "approved": true
+  },
+  {
+   "id": "10-trabalhos-de-casa",
+   "image": "social/posts/10-trabalhos-de-casa.jpg",
+   "at": "2026-11-02 10:00",
+   "approved": false,
+   "caption": "Trabalhos de casa feitos? +10 pontos ✏️\n\nNa SAS Kids, as tarefas que dão mais trabalho valem mais pontos. Os trabalhos de casa vêm sugeridos com 10, mas és tu que decides quanto vale cada tarefa lá em casa.\n\nE quando ficam feitos, a mascote festeja com eles.\n\n#saskids #trabalhosdecasa #rotinaescolar #parentalidade #educacaoinfantil"
+  },
+  {
+   "id": "11-quantos-pontos",
+   "image": "social/posts/11-quantos-pontos.jpg",
+   "at": "2026-11-03 10:00",
+   "approved": false,
+   "caption": "Quantos pontos dar a cada tarefa? 🤔\n\nUma regra simples que funciona:\n⭐ 3 pontos: tarefas rápidas (pôr a roupa no cesto, arrumar os sapatos)\n⭐ 5 pontos: as do dia a dia (fazer a cama, lavar os dentes, pôr a mesa)\n⭐ 10 pontos: as que dão trabalho (trabalhos de casa, arrumar o quarto, ler)\n⭐ 15 pontos: as grandes (estudar para um teste)\n\nAssim, uma criança que faça tudo ganha 30 a 50 pontos por dia. Guarda este post para quando fores montar o vosso sistema 📌\n\n#saskids #dicasparapais #parentalidade #disciplinapositiva #rotinainfantil"
+  },
+  {
+   "id": "12-animal",
+   "image": "social/posts/12-animal.jpg",
+   "at": "2026-11-04 10:00",
+   "approved": false,
+   "caption": "O cão já comeu? +5 pontos 🐶\n\nDar comida e água ao animal lá de casa é das primeiras responsabilidades a sério. Na SAS Kids, esta tarefa aparece a partir dos 6 anos.\n\nTambém tens um animal que conta com os mais pequenos?\n\n#saskids #criancaseanimais #responsabilidade #autonomiainfantil #paisefilhos"
+  },
+  {
+   "id": "13-pin",
+   "image": "social/posts/13-pin.jpg",
+   "at": "2026-11-05 10:00",
+   "approved": false,
+   "caption": "Cada filho com o seu PIN 🔐\n\n👧 Um perfil para cada filho, com foto ou emoji\n📱 Cada um entra no próprio telemóvel ou tablet\n🙅 Ninguém marca tarefas no lugar do irmão\n✅ O pai/mãe tem um PIN só seu para validar\n\nUma app, a família toda, cada um no seu lugar.\n\n#saskids #irmaos #organizacaofamiliar #parentalidade #appparapais"
+  },
+  {
+   "id": "14-ler",
+   "image": "social/posts/14-ler.jpg",
+   "at": "2026-11-06 10:00",
+   "approved": false,
+   "caption": "20 minutos de leitura? +10 pontos 📖\n\nO hábito de ler constrói-se uma página de cada vez. Na SAS Kids, \"Ler 20 minutos\" vale 10 pontos, e a mascote vira as páginas com eles.\n\nQual é o livro favorito lá de casa? Deixa nos comentários 👇\n\n#saskids #habitodeleitura #livrosinfantis #educacaoinfantil #criancasfelizes"
+  },
+  {
+   "id": "15-premios-sem-dinheiro",
+   "image": "social/posts/15-premios-sem-dinheiro.jpg",
+   "at": "2026-11-07 10:00",
+   "approved": false,
+   "caption": "Prémios que não custam dinheiro 💛\n\n🍝 Escolher o jantar de um dia: 80 pontos\n🌙 Deitar 30 min mais tarde ao fim de semana: 60\n🎲 Noite de jogos de tabuleiro: 100\n🥐 Pequeno-almoço na cama: 100\n👨‍👧 Uma tarde a sós com o pai ou a mãe: 300\n\nMuitas vezes, o melhor prémio é tempo juntos. Qual destes é o preferido lá de casa?\n\n#saskids #tempoemfamilia #parentalidade #disciplinapositiva #ideiasparacriancas"
+  },
+  {
+   "id": "16-quarto",
+   "image": "social/posts/16-quarto.jpg",
+   "at": "2026-11-08 10:00",
+   "approved": false,
+   "caption": "Quarto arrumado? +10 pontos 🧸\n\nLivros no lugar, brinquedos na caixa. Arrumar o quarto é das tarefas que mais custam, por isso vale mais.\n\nDica: combinem juntos o que é um \"quarto arrumado\". Assim ninguém discute se ficou feito.\n\n#saskids #arrumacao #autonomiainfantil #rotinainfantil #maternidade"
+  },
+  {
+   "id": "17-tarefas-por-idade",
+   "image": "social/posts/17-tarefas-por-idade.jpg",
+   "at": "2026-11-09 10:00",
+   "approved": false,
+   "caption": "Tarefas certas para cada idade 👶👦👧\n\n• A partir dos 4 anos: arrumar os brinquedos, vestir-se sozinho\n• A partir dos 7 anos: ajudar com a loiça, cumprir o tempo de ecrã\n• A partir dos 10 anos: estender a roupa, aspirar uma divisão\n\nAo adicionares um filho na SAS Kids, a app já escolhe as tarefas para a idade dele. Tu só confirmas os pontos.\n\n#saskids #tarefasporidade #autonomiainfantil #montessoriemcasa #parentalidade"
+  },
+  {
+   "id": "18-pormesa",
+   "image": "social/posts/18-pormesa.jpg",
+   "at": "2026-11-10 10:00",
+   "approved": false,
+   "caption": "Mesa posta? +5 pontos 🍽️\n\nPrato, garfo, faca e copo. O jantar começa com uma ajuda, e a partir dos 5 anos já dá para pôr a mesa sozinho.\n\nLá em casa, quem põe a mesa?\n\n#saskids #ajudaremcasa #tarefasdecasa #rotinainfantil #paisefilhos"
+  },
+  {
+   "id": "19-3-regras",
+   "image": "social/posts/19-3-regras.jpg",
+   "at": "2026-11-11 10:00",
+   "approved": false,
+   "caption": "3 regras para os pontos resultarem 🏆\n\n1️⃣ Combinem os prémios juntos: se os filhos ajudarem a escolher, esforçam-se mais\n2️⃣ Validem no próprio dia: a recompensa tem de vir logo a seguir\n3️⃣ Elogiem o esforço: os pontos ajudam, mas o elogio conta mais\n\nGuarda este post 📌\n\n#saskids #dicasparapais #disciplinapositiva #parentalidade #educacaoinfantil"
+  },
+  {
+   "id": "20-mochila",
+   "image": "social/posts/20-mochila.jpg",
+   "at": "2026-11-12 10:00",
+   "approved": false,
+   "caption": "Mochila pronta para amanhã? +5 pontos 🎒\n\nLivros, estojo e lanche, preparados na véspera. É a tarefa que transforma as manhãs: menos correrias, menos \"onde está o meu caderno?\".\n\n#saskids #rotinaescolar #manhassemstress #autonomiainfantil #paisefilhos"
+  },
+  {
+   "id": "21-lembretes",
+   "image": "social/posts/21-lembretes.jpg",
+   "at": "2026-11-13 10:00",
+   "approved": false,
+   "caption": "Lembretes à hora certa 🔔\n\n🔔 O pai/mãe recebe um aviso quando um filho marca uma tarefa\n📋 Ao fim do dia, os filhos são lembrados das tarefas que ainda não marcaram\n🎁 Os pedidos de prémios chegam logo ao telemóvel\n\nMenos \"já fizeste?\", mais \"já está!\".\n\n#saskids #appparapais #organizacaofamiliar #parentalidade #tecnologiaemfamilia"
+  },
+  {
+   "id": "22-missao-carro",
+   "image": "social/posts/22-missao-carro.jpg",
+   "at": "2026-11-14 10:00",
+   "approved": false,
+   "caption": "Missão de fim de semana: lavar o carro 🚗🫧\n\nAs missões são desafios com prazo: \"Ajudar a lavar o carro até domingo\" vale 25 pontos. No fim do prazo, tu decides se a missão foi cumprida.\n\nQue missão lançavas este fim de semana?\n\n#saskids #fimdesemanaemfamilia #desafiosparacriancas #paisefilhos #criancasfelizes"
+  },
+  {
+   "id": "23-deitar",
+   "image": "social/posts/23-deitar.jpg",
+   "at": "2026-11-15 10:00",
+   "approved": false,
+   "caption": "Cama à hora combinada? +5 pontos 🌙\n\nBoa noite, sem negociações. Na SAS Kids, ir para a cama à hora combinada é uma tarefa como as outras, e conta pontos.\n\nBom domingo e boa semana! 💛\n\n#saskids #rotinadesono #horadedormir #rotinainfantil #maternidade"
   }
  ]
 }

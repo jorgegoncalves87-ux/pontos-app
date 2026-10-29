@@ -1,7 +1,7 @@
 <?php
 // Publicador do Instagram da SAS Kids (@saskidsapp), para correr no alojamento (cPanel) com uma
 // tarefa agendada a cada 15 minutos. Lê a fila em social/queue.json e publica, um de cada vez,
-// os posts cuja hora (de Lisboa) já chegou. As imagens são servidas pelo próprio site
+// os posts aprovados ("approved": true) cuja hora (de Lisboa) já chegou. As imagens são servidas pelo próprio site
 // (https://saskids.net/social/...), que é de onde a Meta as vai buscar.
 //
 // O acesso à conta fica FORA da pasta pública, em /home/UTILIZADOR/pontos-secrets/instagram.json
@@ -97,13 +97,16 @@ $state = is_readable($STATE_FILE) ? (json_decode(file_get_contents($STATE_FILE),
 $done = fn($p) => !empty($state[$p['id']]['media_id']);
 $failed = fn($p) => ($state[$p['id']]['attempts'] ?? 0) >= MAX_ATTEMPTS;
 $atOf = fn($p) => new DateTimeImmutable($p['at'], new DateTimeZone(TZ));
-$pending = array_values(array_filter($queue, fn($p) => !$done($p) && !$failed($p)));
+// Só sai o que foi aprovado (o Jorge valida cada post na véspera); o resto espera.
+$pending = array_values(array_filter($queue, fn($p) => !$done($p) && !$failed($p) && ($p['approved'] ?? false) === true));
+$waiting = array_values(array_filter($queue, fn($p) => !$done($p) && ($p['approved'] ?? false) !== true));
 usort($pending, fn($a, $b) => $atOf($a) <=> $atOf($b));
 
 if ($CHECK) {
     $me = graph('GET', $conf['ig_user_id'], ['fields' => 'username,media_count', 'access_token' => $conf['page_token']]);
     out("Ligação OK: @{$me['username']}, {$me['media_count']} publicações.");
     out(count($pending) . ' por publicar' . ($pending ? '; a seguinte: ' . $pending[0]['id'] . ' em ' . $pending[0]['at'] : '') . '.');
+    if ($waiting) out(count($waiting) . ' à espera de aprovação; o primeiro: ' . $waiting[0]['id'] . ' (' . $waiting[0]['at'] . ').');
     foreach ($queue as $p) if ($failed($p)) out("Parado depois de " . MAX_ATTEMPTS . " falhas: {$p['id']} ({$state[$p['id']]['error']})");
     exit(0);
 }
