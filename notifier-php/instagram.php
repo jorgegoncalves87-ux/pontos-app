@@ -119,25 +119,29 @@ $lock = fopen("$SECRETS/instagram.lock", 'c');
 if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) exit(0);
 
 $p = $due[0];
-// Um post é uma imagem ("image") ou um Reel ("video", MP4 9:16).
-$isReel = !empty($p['video']);
-$mediaUrl = $SITE . '/' . ltrim($isReel ? $p['video'] : $p['image'], '/');
+// Um post é uma imagem ("image") ou um Reel ("video", MP4 9:16); com "story": true sai como story
+// (imagem ou vídeo 9:16, sem legenda: a Meta não aceita legenda, link nem autocolantes em stories por API).
+$isStory = !empty($p['story']);
+$isReel = !empty($p['video']) && !$isStory;
+$mediaUrl = $SITE . '/' . ltrim(!empty($p['video']) ? $p['video'] : $p['image'], '/');
 if ($DRY) { out("[dry] publicaria {$p['id']} ($mediaUrl)."); exit(0); }
 
 $token = $conf['page_token'];
 try {
-    $params = $isReel
-        ? ['media_type' => 'REELS', 'video_url' => $mediaUrl, 'share_to_feed' => 'true', 'caption' => $p['caption'], 'access_token' => $token]
-        : ['image_url' => $mediaUrl, 'caption' => $p['caption'], 'access_token' => $token];
+    $params = $isStory
+        ? ['media_type' => 'STORIES', (!empty($p['video']) ? 'video_url' : 'image_url') => $mediaUrl, 'access_token' => $token]
+        : ($isReel
+            ? ['media_type' => 'REELS', 'video_url' => $mediaUrl, 'share_to_feed' => 'true', 'caption' => $p['caption'], 'access_token' => $token]
+            : ['image_url' => $mediaUrl, 'caption' => $p['caption'], 'access_token' => $token]);
     $container = graph('POST', "{$conf['ig_user_id']}/media", $params)['id'];
     // A Meta descarrega e processa a imagem antes de deixar publicar.
     $status = '';
     // Os vídeos demoram mais a processar do lado da Meta (até alguns minutos).
-    $deadline = time() + (int)(getenv('IG_POLL_SECONDS') ?: ($isReel ? 600 : 90));
+    $deadline = time() + (int)(getenv('IG_POLL_SECONDS') ?: (!empty($p['video']) ? 600 : 90));
     do {
         $status = graph('GET', $container, ['fields' => 'status_code', 'access_token' => $token])['status_code'] ?? '';
         if ($status === 'FINISHED' || $status === 'ERROR') break;
-        sleep(getenv('IG_POLL_SECONDS') ? 0 : ($isReel ? 15 : 5));
+        sleep(getenv('IG_POLL_SECONDS') ? 0 : (!empty($p['video']) ? 15 : 5));
     } while (time() < $deadline);
     if ($status !== 'FINISHED') throw new RuntimeException("a imagem não ficou pronta (estado: " . ($status ?: '?') . ")");
     $media = graph('POST', "{$conf['ig_user_id']}/media_publish", ['creation_id' => $container, 'access_token' => $token])['id'];

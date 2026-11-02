@@ -11,15 +11,15 @@ def when(at):
     return f"{DOW[date(y, m, dd).weekday()]} {dd}/{m} · {h}"
 cards = []
 for i, p in enumerate(items, 1):
-    reel = 'video' in p
+    reel = 'video' in p; story = bool(p.get('story'))
     media = (f'<video src="{p["video"]}" controls playsinline preload="metadata" muted loop></video>' if reel
              else f'<img src="{p["image"]}" alt="" loading="lazy">')
     cards.append(f'''<article class="item">
-  <div class="media {'reel' if reel else 'img'}">{media}</div>
-  <div class="txt"><div class="meta"><span class="num">{i}</span><span class="kind">{'Reel' if reel else 'Post'}</span><span>{when(p['at'])}</span></div>
+  <div class="media {'reel' if reel or story else 'img'}">{media}</div>
+  <div class="txt"><div class="meta"><span class="num">{i}</span><span class="kind">{'Story' if story else 'Reel' if reel else 'Post'}</span><span>{when(p['at'])}</span></div>
   <pre>{e(p['caption'])}</pre><code>{e(p['id'])}</code></div></article>''')
 files = {p.get('video') or p.get('image'): '/home/user/pontos-app/' + (p.get('video') or p.get('image')) for p in items}
-nr = sum('video' in p for p in items); ni = len(items) - nr
+nr = sum('video' in p and not p.get('story') for p in items); ns = sum(bool(p.get('story')) for p in items); ni = len(items) - nr - ns
 page = f'''<title>Validação Instagram SAS Kids</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -36,7 +36,7 @@ h1 {{ margin:0; font-size:1.9rem; font-weight:900; text-wrap:balance; }}
 .how {{ background:var(--butter); border-radius:16px; padding:12px 16px; margin:0; }}
 .item {{ display:grid; grid-template-columns:240px minmax(0,1fr); gap:18px; background:var(--card); border:2px solid var(--line); border-radius:22px; padding:14px; }}
 .media video, .media img {{ width:100%; display:block; border-radius:14px; background:#000; max-width:100%; }}
-.media.reel video {{ aspect-ratio:9/16; }} .media.img img {{ aspect-ratio:4/5; object-fit:cover; }}
+.media.reel video, .media.reel img {{ aspect-ratio:9/16; object-fit:cover; }} .media.img img {{ aspect-ratio:4/5; object-fit:cover; }}
 .txt {{ min-width:0; display:grid; gap:8px; align-content:start; }}
 .meta {{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; font-weight:800; font-size:.9rem; }}
 .num {{ background:var(--teal); color:#fff; border-radius:999px; min-width:2em; text-align:center; padding:2px 10px; font-variant-numeric:tabular-nums; }}
@@ -47,7 +47,7 @@ code {{ color:var(--muted); font-size:.75rem; }}
 </style>
 <main>
 <header style="display:grid;gap:8px"><h1>Validação Instagram SAS Kids</h1>
-<p class="lead">{nr} Reels e {ni} posts à espera da tua aprovação. Nada disto sai sem o teu ok.</p></header>
+<p class="lead">{', '.join(x for x in [f'{nr} Reels' if nr else '', f'{ns} stories' if ns else '', f'{ni} posts' if ni else ''] if x)} à espera da tua aprovação. Nada disto sai sem o teu ok.</p></header>
 <p class="how">Responde na conversa com o Claude: <b>"aprovo todos"</b>, ou por exemplo <b>"aprovo todos menos 7 e 12; no 3 muda a frase para…"</b>. Os números são os da esquerda.</p>
 {''.join(cards)}
 </main>'''
