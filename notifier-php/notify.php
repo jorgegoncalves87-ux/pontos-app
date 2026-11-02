@@ -25,7 +25,7 @@ $NOW = getenv('NOTIFY_NOW') ? new DateTimeImmutable(getenv('NOTIFY_NOW')) : new 
 
 // ---------- Ligação ao Firebase ----------
 $emulator = getenv('FIRESTORE_EMULATOR_HOST');
-$STATS_FILE = getenv('STATS_FILE') ?: null; // estatísticas para o backoffice (bo/), recalculadas de hora a hora
+$STATS_FILE = getenv('STATS_FILE') ?: null; // estatísticas para o backoffice (bo/), recalculadas de 6 em 6 horas
 if ($emulator) {
     $PROJECT = getenv('GCLOUD_PROJECT') ?: 'demo-pontos';
     $BASE = "http://$emulator/v1/projects/$PROJECT/databases/(default)/documents";
@@ -63,6 +63,7 @@ function accessToken(array $sa): string {
 
 function http(string $method, string $url, $body = null, array $headers = [], bool $auth = true): array {
     global $TOKEN;
+    $GLOBALS['HTTP_CALLS'] = ($GLOBALS['HTTP_CALLS'] ?? 0) + 1;
     $ch = curl_init($url);
     if ($auth) $headers[] = "Authorization: Bearer $TOKEN";
     if (is_array($body)) { $body = json_encode($body, JSON_UNESCAPED_UNICODE); $headers[] = 'Content-Type: application/json'; }
@@ -286,11 +287,30 @@ function forKid(array $t, string $kidId): bool { return empty($t['kidIds']) || i
 function processFamily(array $fam): void {
     global $NOW;
     $path = 'families/' . $fam['_id'];
+    global $STATE;
     $notify = $fam['notify'] ?? [];
     $firstRun = empty($notify['initialized']);
+    $st = $STATE[$fam['_id']] ?? [];
+    try { $tz0 = new DateTimeZone($fam['tz'] ?? TZ); } catch (Throwable $e) { $tz0 = new DateTimeZone(TZ); }
+    $date0 = $NOW->setTimezone($tz0)->format('Y-m-d'); $time0 = $NOW->setTimezone($tz0)->format('H:i');
+
+    // Poupar leituras (o plano gratuito da Firebase tem 50 mil por dia): só se pede o que mudou desde a
+    // última execução (com 10 minutos de margem; os campos notified* evitam avisos repetidos).
+    $sinceTs = max($NOW->modify('-3 days')->getTimestamp(), ($st['since'] ?? 0) - 600);
+    $since = gmdate('Y-m-d\TH:i:s\Z', $sinceTs);
+    $newLog = query($path, 'log', 'createdAt', 'GREATER_THAN_OR_EQUAL', ['timestampValue' => $since]);
+    $newPending = array_filter($newLog, fn($d) => ($d['status'] ?? '') === 'pending' && empty($d['notifiedParent']));
+    $newSugg = array_filter(query($path, 'rewards', 'status', 'EQUAL', ['stringValue' => 'suggested']), fn($d) => empty($d['notifiedParent']));
+    $newDecided = array_filter(query($path, 'log', 'decidedAt', 'GREATER_THAN_OR_EQUAL', ['timestampValue' => $since]),
+        fn($d) => empty($d['notifiedKid']) && in_array($d['status'] ?? '', ['approved', 'rejected'], true));
+    $needMissions = ($st['missionsDate'] ?? '') !== $date0;  // missões terminadas: uma verificação por dia
+    $needReminder = $time0 >= REMINDER_START && $time0 <= REMINDER_END && ($notify['lastReminderDate'] ?? '') !== $date0;
+    $STATE[$fam['_id']] = ['since' => $NOW->getTimestamp(), 'missionsDate' => $st['missionsDate'] ?? ''];
+    if (!$firstRun && !$newPending && !$newSugg && !$newDecided && !$needMissions && !$needReminder) return;
+
     $kids = []; foreach (listDocs("$path/kids") as $k) $kids[$k['_id']] = $k;
     $tokens = listDocs("$path/pushTokens");
-    $tasks = listDocs("$path/tasks");
+    $tasks = ($firstRun || $needMissions || $needReminder) ? listDocs("$path/tasks") : [];
     $parentTokens = array_filter($tokens, fn($t) => ($t['parent'] ?? false) === true);
     $kidTokens = fn($id) => array_filter($tokens, fn($t) => in_array($id, $t['kids'] ?? [], true));
     $L = famLang($fam);
@@ -301,8 +321,6 @@ function processFamily(array $fam): void {
     $date = $lis->format('Y-m-d'); $time = $lis->format('H:i');
 
     // 1) Pai/mãe: novos pedidos à espera de validação.
-    $newPending = array_filter(query($path, 'log', 'status', 'EQUAL', ['stringValue' => 'pending']), fn($d) => empty($d['notifiedParent']));
-    $newSugg = array_filter(query($path, 'rewards', 'status', 'EQUAL', ['stringValue' => 'suggested']), fn($d) => empty($d['notifiedParent']));
     if (!$firstRun && ($newPending || $newSugg)) {
         $byKid = [];
         foreach ($newPending as $e) {
@@ -328,7 +346,8 @@ function processFamily(array $fam): void {
 
     // 1b) Pai/mãe: missões cujo prazo acabou e ainda não foram decididas.
     $specials = array_filter($tasks, fn($t) => ($t['active'] ?? true) !== false && !empty($t['special']) && !empty($t['deadline']));
-    $ended = array_filter($specials, fn($t) => $t['deadline'] < $date && empty($t['notifiedEnded']));
+    $ended = $needMissions ? array_filter($specials, fn($t) => $t['deadline'] < $date && empty($t['notifiedEnded'])) : [];
+    if ($needMissions) $STATE[$fam['_id']]['missionsDate'] = $date0;
     $specialLog = null;
     if ($ended) {
         $specialLog = query($path, 'log', 'type', 'EQUAL', ['stringValue' => 'special']);
@@ -344,9 +363,6 @@ function processFamily(array $fam): void {
     }
 
     // 2) Filhos: pontos validados (ou rejeitados), correções, bónus e penalizações dos últimos 3 dias.
-    $since = $NOW->modify('-3 days')->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
-    $newDecided = array_filter(query($path, 'log', 'decidedAt', 'GREATER_THAN_OR_EQUAL', ['timestampValue' => $since]),
-        fn($d) => empty($d['notifiedKid']) && in_array($d['status'] ?? '', ['approved', 'rejected'], true));
     if (!$firstRun) {
         $byKid = [];
         foreach ($newDecided as $e) $byKid[$e['kidId']][] = $e;
@@ -371,7 +387,7 @@ function processFamily(array $fam): void {
     updateMany(array_map(fn($d) => [$d['_name'], ['notifiedKid' => true]], array_values($newDecided)));
 
     // 3) Filhos: lembrete das 19:45 se ainda há tarefas de hoje por marcar ou missões a acabar.
-    if ($time >= REMINDER_START && $time <= REMINDER_END && ($notify['lastReminderDate'] ?? '') !== $date) {
+    if ($needReminder) {
         $marked = [];
         foreach (query($path, 'log', 'date', 'EQUAL', ['stringValue' => $date]) as $d) if (($d['type'] ?? '') === 'task') $marked["{$d['kidId']}|{$d['taskId']}"] = true;
         $claimed = [];
@@ -395,13 +411,21 @@ function processFamily(array $fam): void {
 }
 
 // ---------- Todas as famílias ----------
+// Estado do notificador (até onde já leu em cada família), guardado no servidor e não na Firebase,
+// para não gastar escritas nem acordar as apps abertas a cada 5 minutos.
+$STATE_FILE_N = getenv('NOTIFY_STATE') ?: ($emulator ? null : rtrim($home, '/') . '/pontos-secrets/notify-state.json');
+$STATE = ($STATE_FILE_N && is_readable($STATE_FILE_N)) ? (json_decode(file_get_contents($STATE_FILE_N), true) ?: []) : [];
 $failed = 0;
 $families = listDocs('families');
 foreach ($families as $fam) {
-    try { processFamily($fam); } catch (Throwable $e) { $failed++; fwrite(STDERR, "[{$fam['_id']}] erro: " . $e->getMessage() . "\n"); }
+    try { processFamily($fam); } catch (Throwable $e) {
+        $failed++; fwrite(STDERR, "[{$fam['_id']}] erro: " . $e->getMessage() . "\n");
+        unset($STATE[$fam['_id']]['since']); // tenta de novo a mesma janela na próxima vez
+    }
 }
-// Estatísticas para o backoffice, no máximo uma vez por hora (ou já, com FORCE_STATS=1).
-if ($STATS_FILE && (getenv('FORCE_STATS') || !is_file($STATS_FILE) || filemtime($STATS_FILE) < time() - 55 * 60)) {
+if ($STATE_FILE_N) { file_put_contents($STATE_FILE_N, json_encode($STATE), LOCK_EX); @chmod($STATE_FILE_N, 0600); }
+// Estatísticas para o backoffice, de 6 em 6 horas (ou já, com FORCE_STATS=1): leem o histórico todo.
+if ($STATS_FILE && (getenv('FORCE_STATS') || !is_file($STATS_FILE) || filemtime($STATS_FILE) < time() - 6 * 3600 + 300)) {
     $rows = [];
     foreach ($families as $fam) {
         try { $rows[] = familyStats($fam); } catch (Throwable $e) { fwrite(STDERR, "[{$fam['_id']}] estatísticas: " . $e->getMessage() . "\n"); }
@@ -414,5 +438,5 @@ if ($STATS_FILE && (getenv('FORCE_STATS') || !is_file($STATS_FILE) || filemtime(
     rename($tmp, $STATS_FILE);
     echo 'Estatísticas: ' . count($rows) . " família(s).\n";
 }
-echo 'Feito: ' . count($families) . ' família(s)' . ($failed ? ", $failed com erro" : '') . ".\n";
+echo 'Feito: ' . count($families) . ' família(s)' . ($failed ? ", $failed com erro" : '') . (getenv('NOTIFY_DEBUG') ? ' · ' . ($GLOBALS['HTTP_CALLS'] ?? 0) . ' pedidos' : '') . ".\n";
 exit($failed ? 1 : 0);
