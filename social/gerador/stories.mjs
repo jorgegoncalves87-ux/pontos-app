@@ -22,8 +22,8 @@ const C = { cream: "#fffdf8", teal: "#1fa5a8", dark: "#2f3657", muted: "#646b8a"
 // [id, cor, etiqueta, título, cena (ou null para a mascote a dançar), rodapé]
 const teaser = (id, color, hook, sceneId) => [id, color, "Hoje às 19h", hook, sceneId, "Novo Reel 🎬 · @saskidsapp"];
 const tip = (id, color, label, text, sceneId) => [id, color, label, text, sceneId, "saskids.net · grátis"];
-// Estas saem em vídeo (6 s, animadas e com música); as outras ficam em imagem.
-export const ANIMATED = new Set(["s01", "s03", "s05", "s07", "s09", "s11", "s13", "s15", "s17", "s19"]);
+// Todas saem em vídeo (6 s, animadas e com música), a pedido do Jorge; para uma sair em imagem, tira-a daqui.
+export const ANIMATED = { has: () => true };
 const FPS = 30, DUR = 6;
 
 export const STORIES = [
