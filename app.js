@@ -12,12 +12,24 @@ import {
 // As notificações (firebase-messaging) só são carregadas quando alguém as liga.
 const messaging = () => import("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js");
 import { firebaseConfig, vapidKey } from "./firebase-config.js";
-import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.18";
-import { landingHTML } from "./landing.js?v=2026-10-28.18";
+import { t as tr, LANG, LOCALE, LANGS, setLang, legalUrl } from "./i18n.js?v=2026-10-28.19";
+import { landingHTML } from "./landing.js?v=2026-10-28.19";
 
 // ---------- Firebase ----------
 // ?emulator abre a app contra os emuladores locais (apenas para testes).
 const useEmulator = new URLSearchParams(location.search).has("emulator");
+// De onde veio quem se regista (ex.: saskids.net/?ig, o link da bio do Instagram). Fica só no aparelho
+// até a família ser criada; conta a primeira origem. Sem ferramentas de rastreio.
+const SRC_KEY = "sk-src";
+(() => {
+  const q = new URLSearchParams(location.search);
+  const src = q.has("ig") ? "instagram" : (q.get("src") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 20);
+  if (!src) return;
+  try { if (!localStorage.getItem(SRC_KEY)) localStorage.setItem(SRC_KEY, src); } catch {}
+  q.delete("ig"); q.delete("src");
+  history.replaceState(null, "", location.pathname + (q.toString() ? `?${q}` : "") + location.hash);
+})();
+const signupSource = () => { try { return localStorage.getItem(SRC_KEY) || null; } catch { return null; } };
 const config = useEmulator ? { apiKey: "demo", projectId: "demo-pontos", authDomain: "localhost" } : firebaseConfig;
 const configured = useEmulator || !String(firebaseConfig.apiKey).startsWith("COLOCA");
 
@@ -573,7 +585,7 @@ function renderSetup() {
     if (!validPin(pin)) { err.textContent = tr("O PIN tem de ter 4 a 6 dígitos."); return; }
     if (pin !== pin2) { err.textContent = tr("Os PINs não coincidem."); return; }
     await guard(async () => {
-      await setDoc(famDoc(), { parentPinHash: await hashPin(pin), lang: LANG, tz: TIMEZONE, createdAt: serverTimestamp() });
+      await setDoc(famDoc(), { parentPinHash: await hashPin(pin), lang: LANG, tz: TIMEZONE, source: signupSource(), createdAt: serverTimestamp() });
       setRole("parent");
       S.tab = "kids";
       render();
@@ -676,7 +688,7 @@ function welcomeCard() {
 let mascotSvg = null;
 // As cenas só são carregadas na primeira vez que a mascote aparece.
 let scenesMod = null;
-const loadScenes = () => (scenesMod ??= import("./scenes.js?v=2026-10-28.18").catch(() => null));
+const loadScenes = () => (scenesMod ??= import("./scenes.js?v=2026-10-28.19").catch(() => null));
 /**
  * Cena da mascote para uma tarefa ou missão: as que vieram das sugestões têm uma animação própria
  * (guardada em task.scene; nas outras reconhece-se pelo título). As restantes usam a dança normal.
@@ -688,7 +700,7 @@ function sceneFor(t) {
   return TASK_IDEAS.find((i) => i[0].toLowerCase() === title)?.[4] || MISSION_IDEAS.find((m) => m[0].toLowerCase() === title)?.[2] || null;
 }
 async function mascotDance(msg, scene = null) {
-  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg?v=2026-10-28.18")).text(); } catch { return toast(msg); }
+  try { mascotSvg ??= await (await fetch("illustrations/mascote.svg?v=2026-10-28.19")).text(); } catch { return toast(msg); }
   const stage = scene && (await loadScenes())?.sceneSvg(scene, mascotSvg);
   document.querySelector(".dance")?.remove();
   const el = document.createElement("div");
@@ -1405,7 +1417,7 @@ function pointsForm(kidId, sign) {
 // ---------- Atualizações ----------
 // Os telemóveis guardam a app em cache; ao abrir (e ao voltar à app) comparamos com version.json
 // e, se houver versão nova, recarregamos os ficheiros. Atualiza APP_VERSION e version.json juntos.
-const APP_VERSION = "2026-10-28.18";
+const APP_VERSION = "2026-10-28.19";
 async function checkForUpdate() {
   try {
     if (!modal.classList.contains("hidden")) return; // não interromper quem está a escrever

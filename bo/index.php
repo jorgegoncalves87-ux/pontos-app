@@ -203,10 +203,13 @@ $bars = function (array $counts) use ($h) {
 };
 $langNames = ['pt' => 'Português', 'es' => 'Español', 'fr' => 'Français', 'it' => 'Italiano', 'en' => 'English', 'zh' => '中文'];
 $langs = []; foreach ($inPer as $f) { $k = $langNames[$f['lang'] ?? 'pt'] ?? ($f['lang'] ?? '?'); $langs[$k] = ($langs[$k] ?? 0) + 1; }
+$srcNames = ['instagram' => 'Instagram'];
+$srcs = []; foreach ($inPer as $f) { $k = $f['source'] ?? null; $k = $k ? ($srcNames[$k] ?? $k) : 'Direto / outro'; $srcs[$k] = ($srcs[$k] ?? 0) + 1; }
 $tzs = []; foreach ($inPer as $f) { $k = $f['tz'] ?: 'Desconhecido'; $tzs[$k] = ($tzs[$k] ?? 0) + 1; }
 arsort($tzs); $tzs = array_slice($tzs, 0, 10, true);
 $body .= '<div class="grid"><div class="card"><h2>Língua <span class="muted small">· inscritas no período</span></h2>' . $bars($langs) . '</div>'
-    . '<div class="card"><h2>Fuso horário <span class="muted small">· indica o país</span></h2>' . $bars($tzs) . '</div></div>';
+    . '<div class="card"><h2>Fuso horário <span class="muted small">· indica o país</span></h2>' . $bars($tzs) . '</div></div>'
+    . '<div class="grid"><div class="card"><h2>Origem <span class="muted small">· de onde vieram as inscritas no período (ex.: link da bio do Instagram, saskids.net/?ig)</span></h2>' . $bars($srcs) . '</div></div>';
 
 // Tabela (todas, mais recentes primeiro); a atividade conta só o período escolhido
 usort($fams, fn($a, $b) => strcmp($b['createdAt'] ?? '', $a['createdAt'] ?? ''));

@@ -222,6 +222,7 @@ function familyStats(array $fam): array {
         'id' => substr(hash('sha256', $fam['_id']), 0, 8),
         'createdAt' => $fam['createdAt'] ?? null,
         'lang' => $fam['lang'] ?? 'pt',
+        'source' => $fam['source'] ?? null,
         'tz' => $fam['tz'] ?? null,
         'kidAges' => array_values(array_map(fn($k) => isset($k['birthYear']) ? $year - (int)$k['birthYear'] : null, $kids)),
         'kidCreated' => array_values(array_map(fn($k) => $day($k['createdAt'] ?? null), $kids)),
