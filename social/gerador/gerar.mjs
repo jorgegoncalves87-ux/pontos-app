@@ -34,36 +34,32 @@ const post = (id, bg, body) => `<section id="${id}" class="post" style="backgrou
 
 const sceneP = (id, bg, h1, sceneId, lead) => post(id, bg, `<h1>${h1}</h1><div class="art scene dance">${scene(sceneId)}</div><p class="lead">${lead}</p>${foot()}`);
 const list = (items) => `<ul class="prizes">${items.map(([t, p]) => `<li><span>${t}</span><b>${p}</b></li>`).join("")}</ul>`;
+const feats = (items) => `<ul class="feats">${items.map(([i, bg, t]) => `<li><span class="ic" style="background:${bg}">${i}</span><b>${t}</b></li>`).join("")}</ul>`;
+const steps = (items) => `<ol class="steps">${items.map(([i, bg, t, d], n) => `<li><span class="ic" style="background:${bg}">${i}</span><span class="n">${n + 1}</span><div><b>${t}</b><span>${d}</span></div></li>`).join("")}</ol>`;
+const star = (n) => `${n} ${ICON.star}`;
 const POSTS = [
-  sceneP("p10", `linear-gradient(170deg, ${C.sky}, ${C.cream} 75%)`, "Trabalhos de casa<br>feitos? <em>+10 pontos</em>", "tpc", "As tarefas que dão mais trabalho valem mais pontos. Tu decides quanto."),
-  post("p11", C.cream, `<h1>Quantos pontos<br>dar a cada tarefa?</h1>
-    ${list([["Tarefas rápidas<small>pôr a roupa no cesto, arrumar os sapatos</small>", `3 ${ICON.star}`], ["Do dia a dia<small>fazer a cama, lavar os dentes, pôr a mesa</small>", `5 ${ICON.star}`], ["Que dão trabalho<small>trabalhos de casa, arrumar o quarto, ler</small>", `10 ${ICON.star}`], ["As grandes<small>estudar para um teste</small>", `15 ${ICON.star}`]])}
-    <p class="lead small">Uma criança que faça tudo ganha 30 a 50 pontos por dia.</p>${foot()}`),
-  sceneP("p12", `linear-gradient(170deg, ${C.butter}, ${C.cream} 75%)`, "O cão já comeu?<br><em>+5 pontos</em>", "animal", "Cuidar do animal lá de casa é das primeiras responsabilidades a sério."),
-  post("p13", C.cream, `<h1>Cada filho<br>com o <em>seu PIN</em></h1>
-    <ul class="feats">${[[ICON.kids, C.mint, "Um perfil para cada filho, com foto ou emoji"], [ICON.phone, C.sky, "Cada um entra no próprio telemóvel ou tablet"], [ICON.shield, C.pink, "Ninguém marca tarefas no lugar do irmão"], [ICON.validate, C.butter, "O pai/mãe tem um PIN só seu para validar"]]
-      .map(([i, bg, t]) => `<li><span class="ic" style="background:${bg}">${i}</span><b>${t}</b></li>`).join("")}</ul>
-    <div class="art corner">${MASCOT}</div>${foot()}`),
-  sceneP("p14", `linear-gradient(170deg, ${C.lilac}, ${C.cream} 75%)`, "20 minutos de leitura?<br><em>+10 pontos</em>", "ler", "Uma página de cada vez. A mascote vira as páginas com eles."),
-  post("p15", C.cream, `<h1>Prémios que<br><em>não custam dinheiro</em></h1>
-    ${list([["Escolher o jantar de um dia", `80 ${ICON.star}`], ["Deitar 30 min mais tarde ao fim de semana", `60 ${ICON.star}`], ["Noite de jogos de tabuleiro", `100 ${ICON.star}`], ["Pequeno-almoço na cama", `100 ${ICON.star}`], ["Uma tarde a sós com o pai ou a mãe", `300 ${ICON.star}`]])}
-    <p class="lead small">Muitas vezes, o melhor prémio é tempo juntos.</p>${foot()}`),
-  sceneP("p16", `linear-gradient(170deg, ${C.mint}, ${C.cream} 75%)`, "Quarto arrumado?<br><em>+10 pontos</em>", "quarto", "Livros no lugar, brinquedos na caixa. E brilha tudo."),
-  post("p17", C.cream, `<h1>Tarefas certas<br>para <em>cada idade</em></h1>
-    ${list([["A partir dos 4 anos<small>arrumar os brinquedos, vestir-se sozinho</small>", "4+"], ["A partir dos 7 anos<small>ajudar com a loiça, cumprir o tempo de ecrã</small>", "7+"], ["A partir dos 10 anos<small>estender a roupa, aspirar uma divisão</small>", "10+"]])}
-    <p class="lead small">Ao adicionares um filho, a app já escolhe as tarefas para a idade dele.</p>${foot()}`),
-  sceneP("p18", `linear-gradient(170deg, ${C.pink}, ${C.cream} 75%)`, "Mesa posta?<br><em>+5 pontos</em>", "pormesa", "Prato, garfo, faca e copo. O jantar começa com uma ajuda."),
-  post("p19", C.cream, `<h1>3 regras para os<br>pontos <em>resultarem</em></h1>
-    <ol class="steps">${[[ICON.rewards, C.pink, "Combinem os prémios juntos", "Se os filhos ajudarem a escolher, esforçam-se mais."], [ICON.validate, C.mint, "Validem no próprio dia", "A recompensa tem de vir logo a seguir."], [ICON.star, C.butter, "Elogiem o esforço", "Os pontos ajudam; o elogio conta mais."]]
-      .map(([i, bg, t, d], n) => `<li><span class="ic" style="background:${bg}">${i}</span><span class="n">${n + 1}</span><div><b>${t}</b><span>${d}</span></div></li>`).join("")}</ol>${foot()}`),
-  sceneP("p20", `linear-gradient(170deg, ${C.sky}, ${C.cream} 75%)`, "Mochila pronta<br>para amanhã? <em>+5</em>", "mochila", "Livros, estojo e lanche, na véspera. Manhãs sem correrias."),
-  post("p21", C.cream, `<h1>Lembretes<br><em>à hora certa</em></h1>
-    <ul class="feats">${[[ICON.bell, C.pink, "O pai/mãe recebe um aviso quando um filho marca uma tarefa"], [ICON.tasks, C.mint, "Ao fim do dia, os filhos são lembrados das tarefas por marcar"], [ICON.rewards, C.butter, "Os pedidos de prémios chegam logo ao telemóvel"]]
-      .map(([i, bg, t]) => `<li><span class="ic" style="background:${bg}">${i}</span><b>${t}</b></li>`).join("")}</ul>
-    <div class="art corner">${MASCOT}</div>${foot()}`),
-  sceneP("p22", `linear-gradient(170deg, ${C.butter}, ${C.cream} 75%)`, "Missão de fim de semana:<br><em>lavar o carro</em>", "carro", "Missões são desafios com prazo. Esta vale 25 pontos."),
-  sceneP("p23", `linear-gradient(170deg, ${C.lilac}, ${C.cream} 75%)`, "Cama à hora<br>combinada? <em>+5</em>", "deitar", "Boa noite, sem negociações. Até amanhã! 🌙"),
+  sceneP("p24", `linear-gradient(170deg, ${C.sky}, ${C.cream} 75%)`, "Banho sem<br>reclamar? <em>+5</em>", "banho", "Com espuma e um patinho, até o banho conta pontos."),
+  post("p25", C.cream, `<h1>Prémios<br><em>até 50 pontos</em></h1>${list([["Escolher a sobremesa", star(30)], ["15 minutos extra de ecrã", star(30)], ["Escolher a música no carro durante uma semana", star(40)], ["Escolher o filme da noite em família", star(50)]])}<p class="lead small">Prémios pequenos, ganhos em 1 ou 2 dias de tarefas.</p>${foot()}`),
+  sceneP("p26", `linear-gradient(170deg, ${C.mint}, ${C.cream} 75%)`, "Vestido<br>sozinho? <em>+3</em>", "vestir", "Para os mais pequenos, dos 4 aos 8 anos, é uma grande conquista."),
+  post("p27", C.cream, `<h1>Validar em<br><em>10 segundos</em></h1>${steps([[ICON.validate, C.mint, "Abre o separador Validar", "Está tudo lá, por filho."], [ICON.kids, C.sky, "Vê o que cada um marcou", "Tarefas, missões e pedidos de prémios."], [ICON.star, C.butter, "Aprova ou rejeita", "Os pontos somam-se na hora."]])}${foot()}`),
+  sceneP("p28", `linear-gradient(170deg, ${C.pink}, ${C.cream} 75%)`, "Fruta e legumes<br>comidos? <em>+5</em>", "fruta", "Uma dentada de cada vez. A mascote dá o exemplo."),
+  post("p29", C.cream, `<h1>Pontos a mais,<br><em>pontos a menos</em></h1>${feats([[ICON.star, C.mint, "Bónus para um esforço extra"], [ICON.shield, C.pink, "Penalização para um mau comportamento"], [ICON.tasks, C.butter, "Correções no histórico, se houver engano"]])}<div class="art corner">${MASCOT}</div>${foot()}`),
+  sceneP("p30", `linear-gradient(170deg, ${C.sky}, ${C.cream} 75%)`, "Loiça<br>arrumada? <em>+5</em>", "loica", "A partir dos 7 anos, já dá uma grande ajuda na cozinha."),
+  post("p31", C.cream, `<h1>Prémios grandes,<br><em>objetivos grandes</em></h1>${list([["Ida ao cinema", star(400)], ["Brinquedo ou jogo até 15 €", star(600)], ["Atividade nova (karting, escalada…)", star(800)], ["Ida ao zoo, aquário ou parque", star(1000)]])}<p class="lead small">Juntar pontos durante semanas também ensina a poupar.</p>${foot()}`),
+  sceneP("p32", `linear-gradient(170deg, ${C.mint}, ${C.cream} 75%)`, "Lixo<br>levado? <em>+5</em>", "lixo", "E a reciclagem separada. Uma tarefa a partir dos 8 anos."),
+  post("p33", C.cream, `<h1>Os filhos também<br><em>sugerem prémios</em></h1>${feats([[ICON.rewards, C.pink, "Eles sugerem o que gostavam de ganhar"], [ICON.validate, C.mint, "Tu decides quantos pontos custa"], [ICON.star, C.butter, "Aprovado, entra na lista de prémios"]])}<div class="art corner">${MASCOT}</div>${foot()}`),
+  sceneP("p34", `linear-gradient(170deg, ${C.lilac}, ${C.cream} 75%)`, "Estudar para<br>o teste? <em>+15</em>", "estudar", "30 minutos de estudo valem 15 pontos. A partir dos 9 anos."),
+  post("p35", C.cream, `<h1>Começa hoje,<br><em>em 3 passos</em></h1>${steps([[ICON.phone, C.sky, "Cria a conta grátis", "Em saskids.net, com o teu email."], [ICON.kids, C.mint, "Adiciona os filhos", "As tarefas vêm escolhidas para a idade."], [ICON.validate, C.butter, "Liga o telemóvel deles", "Com o código QR, num instante."]])}${foot()}`),
+  sceneP("p36", `linear-gradient(170deg, ${C.butter}, ${C.cream} 75%)`, "Lanche feito<br>por ti? <em>+5</em>", "lanche", "Pão, alface, queijo e tomate. Mãos na massa a partir dos 9 anos."),
+  post("p37", C.cream, `<h1>Ideias de<br><em>missões</em></h1>${list([["Ler um livro inteiro", star(50)], ["Arrumar e organizar o armário", star(30)], ["Ajudar a lavar o carro", star(25)], ["Aprender algo novo (bicicleta, nadar…)", star(60)]])}<p class="lead small">Desafios com prazo. No fim, tu decides se ganharam.</p>${foot()}`),
+  sceneP("p38", `linear-gradient(170deg, ${C.sky}, ${C.cream} 75%)`, "Roupa<br>estendida? <em>+10</em>", "roupa", "Estender ou dobrar a roupa: uma tarefa de crescidos, a partir dos 10."),
+  post("p39", C.cream, `<h1>Vê quem<br><em>se esforçou</em></h1>${feats([[ICON.star, C.butter, "Os pontos dos últimos 7 dias, num gráfico"], [ICON.tasks, C.mint, "Tudo o que cada filho fez, dia a dia"], [ICON.validate, C.sky, "A comparação com a semana anterior"]])}<div class="art corner">${MASCOT}</div>${foot()}`),
+  sceneP("p40", `linear-gradient(170deg, ${C.pink}, ${C.cream} 75%)`, "Divisão<br>aspirada? <em>+10</em>", "aspirar", "O pó desaparece e os pontos aparecem."),
+  sceneP("p41", `linear-gradient(170deg, ${C.mint}, ${C.cream} 75%)`, "Treino<br>feito? <em>+10</em>", "desporto", "Desporto ou instrumento: 15 minutos por dia já contam."),
+  post("p42", C.cream, `<h1>Em 6 línguas</h1>${list([["Português", "🇵🇹"], ["English", "🇬🇧"], ["Español", "🇪🇸"], ["Français", "🇫🇷"], ["Italiano", "🇮🇹"], ["中文", "🇨🇳"]])}<p class="lead small">Os avós ou a família de fora também podem usar.</p>${foot()}`),
+  sceneP("p43", `linear-gradient(170deg, ${C.lilac}, ${C.cream} 75%)`, "Tempo de ecrã<br>cumprido? <em>+10</em>", "ecra", "Desligar a horas também é uma tarefa. E das difíceis."),
 ];
+
 const HIGHLIGHTS = [];
 
 
