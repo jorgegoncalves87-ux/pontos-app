@@ -78,6 +78,27 @@ export const REELS = [
   single("r18-levantar-mesa", C.sky, "Mesa<br>levantada?", "levantarmesa", 5, "Acabou o jantar,<br><em>ajudas tu.</em>", 2.3),
   single("r19-armario", C.lilac, "Missão: arrumar<br>o armário", "armario", 30, "Missão<br><em>cumprida!</em>", 2.5),
   single("r20-carro", C.butter, "Missão: lavar<br>o carro", "carro", 25, "Fim de semana<br><em>em família.</em>", 2.6),
+  // Lote 2 (21 nov a 10 dez)
+  montage("r21-fim-de-semana", [[C.butter, "Carro lavado?", "carro", 25, 2.2], [C.mint, "Lanche feito?", "lanche", 5, 2.3], [C.sky, "Roupa estendida?", "roupa", 10, 1.9], [C.lilac, "Quarto arrumado?", "quarto", 10, 1.6]], "Fim de semana<br><em>em equipa.</em>"),
+  single("r22-teste-amanha", C.lilac, "Teste<br>amanhã?", "estudar", 15, "Estudar<br><em>compensa.</em>", 1.6),
+  single("r23-lixo", C.mint, "Lixo<br>lá fora?", "lixo", 5, "Casa limpa,<br><em>pontos na conta.</em>", 1.4),
+  single("r24-loica", C.sky, "Loiça<br>no lugar?", "loica", 5, "Uma ajuda<br><em>de cada vez.</em>", 2.2),
+  montage("r25-os-mais-pequenos", [[C.butter, "Brinquedos na caixa?", "brinquedos", 5, 1.6], [C.mint, "Vestido sozinho?", "vestir", 3, 1.4], [C.lilac, "Dentes lavados?", "dentes", 5, 1.2], [C.pink, "Roupa no cesto?", "cesto", 3, 2.0]], "Pequenos<br><em>grandes heróis.</em>"),
+  single("r26-roupa", C.sky, "Roupa<br>estendida?", "roupa", 10, "Crescidos<br><em>a ajudar.</em>", 1.9),
+  single("r27-aspirar", C.pink, "Pó<br>aspirado?", "aspirar", 10, "Casa<br><em>a brilhar.</em>", 2.2),
+  single("r28-livro", C.lilac, "Missão: ler um<br>livro inteiro", "livro", 50, "Página a página,<br><em>+50 pontos.</em>", 1.8),
+  single("r29-fruta", C.mint, "Fruta<br>comida?", "fruta", 5, "Crescer<br><em>com saúde.</em>", 1.2),
+  montage("r30-antes-de-dormir", [[C.mint, "Dentes lavados?", "dentes", 5, 1.2], [C.sky, "Mochila pronta?", "mochila", 5, 2.0], [C.lilac, "Uma história?", "ler", 10, 1.6], [C.lilac, "Na cama a horas?", "deitar", 5, 1.2]], "Boa noite,<br><em>sem birras.</em>"),
+  single("r31-bicicleta", C.butter, "Missão: andar<br>de bicicleta", "aprender", 60, "Sem rodinhas!<br><em>+60 pontos.</em>"),
+  single("r32-mesa", C.pink, "Mesa<br>posta?", "pormesa", 5, "O jantar<br><em>começa aqui.</em>", 1.7),
+  single("r33-vestir", C.mint, "Vestido<br>sozinho?", "vestir", 3, "Autonomia<br><em>desde cedo.</em>", 1.4),
+  montage("r34-depois-da-escola", [[C.pink, "Sapatos no lugar?", "sapatos", 3, 1.8], [C.sky, "TPC feito?", "tpc", 10, 2.3], [C.butter, "Lanche feito?", "lanche", 5, 2.3], [C.mint, "Treino feito?", "desporto", 10, 1.8]], "Tardes<br><em>organizadas.</em>"),
+  single("r35-dormir", C.lilac, "Na cama<br>a horas?", "deitar", 5, "Dormir bem,<br><em>acordar melhor.</em>", 1.2),
+  single("r36-mochila", C.sky, "Mochila<br>feita?", "mochila", 5, "Nada<br><em>esquecido.</em>"),
+  single("r37-quarto", C.butter, "Quarto<br>arrumado?", "quarto", 10, "Cada coisa<br><em>no seu lugar.</em>", 1.6),
+  single("r38-ler", C.lilac, "Hora<br>de ler?", "ler", 10, "Histórias que<br><em>valem pontos.</em>", 1.6),
+  montage("r39-ajudar-em-casa", [[C.mint, "Lixo levado?", "lixo", 5, 1.4], [C.sky, "Loiça arrumada?", "loica", 5, 2.2], [C.pink, "Divisão aspirada?", "aspirar", 10, 2.2], [C.butter, "Roupa estendida?", "roupa", 10, 1.9]], "Casa de todos,<br><em>tarefas de todos.</em>"),
+  single("r40-animal", C.butter, "Água fresca<br>para o cão?", "animal", 5, "Amigos de<br><em>quatro patas.</em>"),
 ];
 
 const page = (r) => `<!doctype html><html><head><meta charset="utf-8">
