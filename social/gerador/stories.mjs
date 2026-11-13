@@ -47,6 +47,27 @@ export const STORIES = [
   teaser("s18-carro", C.butter, "Missão: lavar<br>o carro 🚗", "carro"),
   tip("s19-dica-pontos", C.mint, "Sabias que…", "Quem faz todas<br>as tarefas ganha<br><em>30 a 50 pontos</em><br>por dia?", null),
   tip("s20-dica-premios", C.sky, "Dica de domingo", "Combinem<br>os prémios <em>juntos</em>:<br>assim esforçam-se<br>mais.", "livro"),
+  // Lote 2 (23 nov a 12 dez): teasers dos Reels r23 a r40 e duas dicas
+  teaser("s21-lixo", C.mint, "Lixo<br>lá fora? ♻️", "lixo"),
+  teaser("s22-loica", C.sky, "Loiça<br>no lugar? 🍽️", "loica"),
+  teaser("s23-pequenos", C.butter, "Pequenos<br>grandes heróis 🦸", "brinquedos"),
+  teaser("s24-roupa", C.sky, "Roupa<br>estendida? 👚", "roupa"),
+  teaser("s25-aspirar", C.pink, "Pó<br>aspirado? 🧹", "aspirar"),
+  teaser("s26-livro", C.lilac, "Missão: ler um<br>livro inteiro 📖", "livro"),
+  teaser("s27-fruta", C.mint, "Fruta<br>comida? 🍎", "fruta"),
+  teaser("s28-boa-noite", C.lilac, "Boa noite,<br>sem birras 🌙", "deitar"),
+  teaser("s29-bicicleta", C.butter, "Missão: andar<br>de bicicleta 🚲", "aprender"),
+  teaser("s30-mesa", C.pink, "Mesa<br>posta? 🍽️", "pormesa"),
+  teaser("s31-vestir", C.mint, "Vestido<br>sozinho? 👕", "vestir"),
+  teaser("s32-escola", C.sky, "Depois<br>da escola 🎒", "tpc"),
+  teaser("s33-dormir", C.lilac, "Na cama<br>a horas? 🌙", "deitar"),
+  teaser("s34-mochila", C.sky, "Mochila<br>feita? 🎒", "mochila"),
+  teaser("s35-quarto", C.butter, "Quarto<br>arrumado? 🧸", "quarto"),
+  teaser("s36-ler", C.lilac, "Hora<br>de ler? 📖", "ler"),
+  teaser("s37-casa", C.mint, "Casa de todos,<br>tarefas de todos 🏡", "loica"),
+  teaser("s38-animal", C.butter, "Água fresca<br>para o cão? 🐶", "animal"),
+  tip("s39-dica-poupar", C.mint, "Sabias que…", "Juntar pontos<br>durante semanas<br>ensina a <em>poupar</em>?", null),
+  tip("s40-dica-missao", C.sky, "Dica de fim de semana", "Lancem uma<br><em>missão</em> para o<br>fim de semana.", "carro"),
 ];
 
 const art = (sceneId) => sceneId

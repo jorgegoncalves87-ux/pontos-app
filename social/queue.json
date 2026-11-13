@@ -761,6 +761,186 @@
    "at": "2026-12-10 19:00",
    "approved": false,
    "caption": "Água fresca para o cão? +5 pontos 🐶\n\nCuidar dos amigos de quatro patas, a partir dos 6 anos.\n\n#saskids #criancaseanimais #responsabilidade #autonomiainfantil #paisefilhos"
+  },
+  {
+   "id": "s21-lixo",
+   "image": "social/stories/s21-lixo.jpg",
+   "video": "social/stories/s21-lixo.mp4",
+   "story": true,
+   "at": "2026-11-23 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Lixo lá fora? ♻️\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s22-loica",
+   "image": "social/stories/s22-loica.jpg",
+   "video": "social/stories/s22-loica.mp4",
+   "story": true,
+   "at": "2026-11-24 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Loiça no lugar? 🍽️\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s23-pequenos",
+   "image": "social/stories/s23-pequenos.jpg",
+   "video": "social/stories/s23-pequenos.mp4",
+   "story": true,
+   "at": "2026-11-25 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Pequenos grandes heróis 🦸\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s24-roupa",
+   "image": "social/stories/s24-roupa.jpg",
+   "video": "social/stories/s24-roupa.mp4",
+   "story": true,
+   "at": "2026-11-26 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Roupa estendida? 👚\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s25-aspirar",
+   "image": "social/stories/s25-aspirar.jpg",
+   "video": "social/stories/s25-aspirar.mp4",
+   "story": true,
+   "at": "2026-11-27 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Pó aspirado? 🧹\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s26-livro",
+   "image": "social/stories/s26-livro.jpg",
+   "video": "social/stories/s26-livro.mp4",
+   "story": true,
+   "at": "2026-11-28 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Missão: ler um livro inteiro 📖\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s27-fruta",
+   "image": "social/stories/s27-fruta.jpg",
+   "video": "social/stories/s27-fruta.mp4",
+   "story": true,
+   "at": "2026-11-29 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Fruta comida? 🍎\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s28-boa-noite",
+   "image": "social/stories/s28-boa-noite.jpg",
+   "video": "social/stories/s28-boa-noite.mp4",
+   "story": true,
+   "at": "2026-11-30 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Boa noite, sem birras 🌙\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s29-bicicleta",
+   "image": "social/stories/s29-bicicleta.jpg",
+   "video": "social/stories/s29-bicicleta.mp4",
+   "story": true,
+   "at": "2026-12-01 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Missão: andar de bicicleta 🚲\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s30-mesa",
+   "image": "social/stories/s30-mesa.jpg",
+   "video": "social/stories/s30-mesa.mp4",
+   "story": true,
+   "at": "2026-12-02 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Mesa posta? 🍽️\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s31-vestir",
+   "image": "social/stories/s31-vestir.jpg",
+   "video": "social/stories/s31-vestir.mp4",
+   "story": true,
+   "at": "2026-12-03 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Vestido sozinho? 👕\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s32-escola",
+   "image": "social/stories/s32-escola.jpg",
+   "video": "social/stories/s32-escola.mp4",
+   "story": true,
+   "at": "2026-12-04 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Depois da escola 🎒\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s33-dormir",
+   "image": "social/stories/s33-dormir.jpg",
+   "video": "social/stories/s33-dormir.mp4",
+   "story": true,
+   "at": "2026-12-05 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Na cama a horas? 🌙\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s34-mochila",
+   "image": "social/stories/s34-mochila.jpg",
+   "video": "social/stories/s34-mochila.mp4",
+   "story": true,
+   "at": "2026-12-06 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Mochila feita? 🎒\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s35-quarto",
+   "image": "social/stories/s35-quarto.jpg",
+   "video": "social/stories/s35-quarto.mp4",
+   "story": true,
+   "at": "2026-12-07 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Quarto arrumado? 🧸\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s36-ler",
+   "image": "social/stories/s36-ler.jpg",
+   "video": "social/stories/s36-ler.mp4",
+   "story": true,
+   "at": "2026-12-08 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Hora de ler? 📖\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s37-casa",
+   "image": "social/stories/s37-casa.jpg",
+   "video": "social/stories/s37-casa.mp4",
+   "story": true,
+   "at": "2026-12-09 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Casa de todos, tarefas de todos 🏡\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s38-animal",
+   "image": "social/stories/s38-animal.jpg",
+   "video": "social/stories/s38-animal.mp4",
+   "story": true,
+   "at": "2026-12-10 18:30",
+   "approved": false,
+   "caption": "Story animada com música · anuncia o Reel das 19:00: Água fresca para o cão? 🐶\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s39-dica-poupar",
+   "image": "social/stories/s39-dica-poupar.jpg",
+   "video": "social/stories/s39-dica-poupar.mp4",
+   "story": true,
+   "at": "2026-12-11 18:30",
+   "approved": false,
+   "caption": "Story animada com música · Sabias que…: Juntar pontos durante semanas ensina a poupar ?\n\n(As stories não levam legenda; este texto é só para a validação.)"
+  },
+  {
+   "id": "s40-dica-missao",
+   "image": "social/stories/s40-dica-missao.jpg",
+   "video": "social/stories/s40-dica-missao.mp4",
+   "story": true,
+   "at": "2026-12-12 18:30",
+   "approved": false,
+   "caption": "Story animada com música · Dica de fim de semana: Lancem uma missão para o fim de semana.\n\n(As stories não levam legenda; este texto é só para a validação.)"
   }
  ]
 }
